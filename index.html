@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
 
-<!-- Inline Custom Favicon -->
+<!-- Inline Custom Favicon -->a
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230b1329' stroke='%2338bdf8' stroke-width='4'/><path d='M40 28 L72 50 L40 72 Z' fill='%2338bdf8'/><path d='M42 54 A10 10 0 1 0 52 64 L52 36 L66 36' fill='none' stroke='%230b1329' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -94,6 +94,73 @@ body.lib-open #lib{margin-left:0}
 .ztool button:hover{background:color-mix(in srgb,var(--ink) 14%,transparent)}
 .ztool b{min-width:48px;text-align:center;font-size:15px}
 
+/* Section mode */
+#secBtn.on{background:color-mix(in srgb,var(--a2) 28%,transparent)}
+.zb.sec .zchip{top:8px;right:100%;transform:translate(-6px,0);display:flex;flex-direction:row;align-items:center;gap:6px;padding:3px 10px;border-radius:999px}
+.zb.sec.sel .zchip{display:flex}
+.zb.sec .zn{max-width:110px;overflow:hidden;text-overflow:ellipsis}
+.zb.sec .zr{display:flex;align-items:center;gap:2px}
+.zb.sec .zv{min-width:30px;text-align:center;font-weight:700}
+.zb.sec .zm,.zb.sec .zp{display:none}
+body.sec-edit .zb.sec .zchip{flex-direction:column;gap:2px;padding:5px 6px 6px;border-radius:18px;box-shadow:0 4px 14px rgba(0,0,0,.35)}
+body.sec-edit .zb.sec .zm,body.sec-edit .zb.sec .zp{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.22);color:inherit;font-size:24px;line-height:1;pointer-events:auto;touch-action:none}
+body.sec-edit .zb.sec .zv{min-width:50px;font-size:17px}
+body.sec-edit .zb.sec.sel .zchip{outline:2px solid var(--ink);outline-offset:1px}
+body:not(.sec-edit) .zb.sec .zbar{pointer-events:none}
+.zb.sec.alt .zbar{border-color:var(--a1)}
+.zb.sec.alt .zchip{background:var(--a1);color:#fff}
+.zb.sec:not(.sel) .zh{display:none}
+.zb.sec.live .zbar{background:color-mix(in srgb,var(--a2) 38%,transparent);box-shadow:0 0 16px var(--glow)}
+#secbar{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:8;display:none;flex-direction:column;gap:8px;width:calc(100% - 20px);max-width:520px;padding:8px 10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.35);font-size:13px}
+body.sec-on:not(.playing) #secbar{display:flex}
+#secbar .sb-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#secbar b{font-weight:700;margin-right:2px}
+#secbar button{padding:7px 11px;border-radius:9px;font-weight:600;background:color-mix(in srgb,var(--ink) 8%,transparent);border:1px solid var(--line);min-height:34px}
+#secbar button:hover{background:color-mix(in srgb,var(--ink) 14%,transparent)}
+#secbar button.pri{background:var(--a2);color:var(--on);border-color:transparent}
+#secbar #secEdit{display:none}
+#secbar.has-sel #secEdit{display:flex;flex-direction:column;align-items:stretch;gap:8px}
+#secbar #secTools button{flex:1;padding:7px 4px;white-space:nowrap}
+#secbar #secEdit .sb-row{flex-wrap:nowrap}
+#secName{flex:1;width:auto}
+#secVal{min-width:50px}
+#secAll{align-self:flex-start}
+#secName{width:112px;min-width:0;padding:7px 9px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:16px}
+#secName:focus-visible,#secSp:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+#secSp{flex:1;min-width:96px;accent-color:var(--a2)}
+#secVal{min-width:62px;text-align:center;font-weight:700}
+#secbar .sq{width:34px;padding:0;font-size:18px}
+#secMode{display:flex;background:color-mix(in srgb,var(--ink) 8%,transparent);border-radius:10px;padding:3px}
+#secbar #secMode button{border:0;background:none;min-height:30px;padding:5px 16px;border-radius:8px;color:var(--mute)}
+#secbar #secMode button.on{background:var(--a2);color:var(--on)}
+#secbar #secTools{display:none}
+body.sec-edit #secbar #secTools{display:flex}
+body.show #secbar{display:none!important}
+body.sec-on:not(.sec-edit) #secbar{width:max-content;padding:5px 8px;flex-direction:row;align-items:center}
+#secTime{width:66px;min-width:0;padding:7px 8px;border-radius:9px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:16px;text-align:center}
+#secTime:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+#secbar .tm{display:flex;align-items:center;gap:5px;color:var(--mute)}
+#secbar #secTapRow{display:none}
+#secbar.tapping #secTapRow{display:flex}
+#secbar.tapping .sb-row:not(#secTapRow){display:none}
+#secTapNext{flex:1;min-width:170px;padding:14px 16px;font-size:15px}
+
+/* Show mode */
+#showbar{position:absolute;left:0;right:0;bottom:0;height:36px;display:none;align-items:stretch;background:var(--panel);border-top:1px solid var(--line);z-index:9;font-size:13px}
+body.show #showbar{display:flex}
+body.show #scroller{bottom:36px}
+body.show #msg{bottom:48px}
+body.sec-on #msg{top:12px;bottom:auto}
+#showbar button{flex:1;min-width:0;display:flex;align-items:center;gap:8px;padding:0 14px;color:var(--ink);font-weight:600}
+#showbar button:disabled{opacity:.3;cursor:default}
+#showbar #shPrev{justify-content:flex-start}
+#showbar #shNext{justify-content:flex-end}
+#showbar .sn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#showbar svg{flex:none}
+#showbar .sep{width:1px;background:var(--line)}
+button{touch-action:manipulation}
+#rail,#showbar,.zchip{-webkit-user-select:none;user-select:none}
+.hint{font-size:12px;color:var(--mute);margin-top:8px;line-height:1.4}
 /* stage */
 #stage{flex:1;min-width:0;position:relative;background:var(--stage)}
 #scroller{position:absolute;inset:0;overflow:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
@@ -139,11 +206,10 @@ body.lib-open #lib{margin-left:0}
 #rail.min>:not(#fold){display:none}
 #rail.min #fold svg{transform:rotate(180deg)}
 
-@media (max-width:899px){
-  #lib{position:absolute;left:0;top:0;bottom:0;margin-left:0;transform:translateX(-100%);box-shadow:6px 0 30px rgba(0,0,0,.35)}
-  body.lib-open #lib{transform:none;margin-left:0}
-  body.lib-open #scrim{display:block;position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:25}
-}
+/* The library always slides over the sheet, so opening or closing it never resizes the music. */
+#lib{position:absolute;left:0;top:0;bottom:0;margin-left:0;transform:translateX(-100%);box-shadow:6px 0 30px rgba(0,0,0,.35);visibility:hidden;transition:transform .25s ease,visibility 0s .25s}
+body.lib-open #lib{transform:none;margin-left:0;visibility:visible;transition:transform .25s ease}
+body.lib-open #scrim{display:block;position:absolute;inset:0;background:rgba(0,0,0,.45);z-index:25}
 </style>
 </head>
 <body class="lib-open">
@@ -170,7 +236,8 @@ body.lib-open #lib{margin-left:0}
       <div class="set">
         <div class="lbl">Speed unit</div>
         <div class="seg" id="seg"><button data-u="lvl">Level</button><button data-u="bpm">BPM</button></div>
-        <div class="bps" id="bpsrow" title="How many beats pass before the page moves one screen height"><span>Beats per screen</span><div><button id="bm" aria-label="Fewer beats per screen">−</button><b id="bpsv">32</b><button id="bp" aria-label="More beats per screen">+</button></div></div>
+        <div class="bps" id="bpsrow" title="How many beats go by while the sheet scrolls one page"><span>Beats per page</span><div><button id="bm" aria-label="Fewer beats per page">−</button><b id="bpsv">32</b><button id="bp" aria-label="More beats per page">+</button></div></div>
+        <div class="hint">Speed is measured against the sheet, not the screen, so it plays the same on iPhone, iPad, Android, Windows and Mac.</div>
       </div>
       <div class="toggle-row">
         <span>3s Lead-In Countdown</span>
@@ -202,6 +269,42 @@ body.lib-open #lib{margin-left:0}
       </div>
     </div>
     <div id="msg"></div>
+    <!-- Section mode bar -->
+    <div id="secbar">
+      <div class="sb-row">
+        <b>Sections</b>
+        <div id="secMode" role="group" aria-label="View or edit sections"><button data-m="view">View</button><button data-m="edit">Edit</button></div>
+      </div>
+      <div class="sb-row" id="secTools">
+        <button class="pri" id="secAuto" title="Find Verse, Chorus, Bridge… labels in the PDF and add a section for each">Detect</button>
+        <button id="secAdd">+ Add</button>
+        <button id="secClear">Clear</button>
+        <button id="secTap" title="Play the real song and tap at each section start to copy its timing">Tap-time</button>
+      </div>
+      <div class="sb-row" id="secEdit">
+        <div class="sb-row">
+          <input id="secName" maxlength="24" aria-label="Section name" placeholder="Name">
+          <label class="tm">Length <input id="secTime" inputmode="numeric" aria-label="Section length, minutes:seconds" placeholder="0:00"></label>
+          <button class="sq" id="secDel" aria-label="Delete section">×</button>
+        </div>
+        <div class="sb-row">
+          <button class="sq" id="secDn" aria-label="Slower">−</button>
+          <input type="range" id="secSp" min="1" max="100" step="1" aria-label="Section speed">
+          <button class="sq" id="secUp" aria-label="Faster">+</button>
+          <span id="secVal"></span>
+        </div>
+        <button id="secAll" title="Give every section with the same name this speed">All</button>
+      </div>
+      <div class="sb-row" id="secTapRow">
+        <button class="pri" id="secTapNext"></button>
+        <button id="secTapCancel">Cancel</button>
+      </div>
+    </div>
+    <div id="showbar">
+      <button id="shPrev" aria-label="Previous song"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span class="sn"></span></button>
+      <div class="sep"></div>
+      <button id="shNext" aria-label="Next song"><span class="sn"></span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+    </div>
     <div id="cd-overlay"><div id="cd-num">3</div></div>
 
     <!-- Notes Panel -->
@@ -220,8 +323,9 @@ body.lib-open #lib{margin-left:0}
     <button class="tool" id="zout" aria-label="Zoom out">−</button>
     <button class="tool" id="top" aria-label="Back to top"></button>
     <button class="tool" id="notes" aria-label="Notes"></button>
+    <button class="tool" id="secBtn" aria-label="Section mode" title="Section mode: each song section gets its own speed"></button>
     <button class="tool" id="zadd" aria-label="Add speed bracket" title="Add speed bracket"></button>
-    <button class="tool" id="gigMode" aria-label="Toggle Gig Mode"></button>
+    <button class="tool" id="gigMode" aria-label="Show mode" title="Show mode: dark, library closed, next-song bar"></button>
     <button class="tool" id="fold" aria-label="Hide controls"></button>
   </nav>
 </div>
@@ -241,7 +345,7 @@ const IC={
  fold:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>',
  gig:'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7zM9 21h6"/></svg>'
 };
-$('#menu').innerHTML=IC.menu;$('#top').innerHTML=IC.top;$('#fold').innerHTML=IC.fold;$('#notes').innerHTML='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6zM9 12h7M9 16h7M9 8h3"/></svg>';$('#play').innerHTML=IC.play;$('#gigMode').innerHTML=IC.gig;$('#zadd').innerHTML='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4h8v16h-8M3 12h6M6 9v6"/></svg>';
+$('#menu').innerHTML=IC.menu;$('#top').innerHTML=IC.top;$('#fold').innerHTML=IC.fold;$('#notes').innerHTML='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6zM9 12h7M9 16h7M9 8h3"/></svg>';$('#play').innerHTML=IC.play;$('#gigMode').innerHTML=IC.gig;$('#secBtn').innerHTML='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h5v6H4zM4 14h5v6H4zM13 7h7M13 17h7"/></svg>';$('#zadd').innerHTML='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4h8v16h-8M3 12h6M6 9v6"/></svg>';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -282,13 +386,27 @@ $('#pbToggle').onchange=e=>{pbOn=e.target.checked;try{localStorage.setItem('ss_p
 $('#pbAmt').oninput=e=>{pbAmt=+e.target.value;try{localStorage.setItem('ss_pbamt',pbAmt)}catch(ex){}syncPb()};
 syncPb();
 
-if(isGigTheme){document.documentElement.setAttribute('data-theme','gig');$('#gigMode').classList.add('on')}
-
-$('#gigMode').onclick=()=>{
-  isGigTheme=!isGigTheme;
-  if(isGigTheme){document.documentElement.setAttribute('data-theme','gig');$('#gigMode').classList.add('on');localStorage.setItem('ss_theme','gig');}
-  else{document.documentElement.removeAttribute('data-theme');$('#gigMode').classList.remove('on');localStorage.setItem('ss_theme','std');}
-};
+/* ---------- Show mode: dark, library closed, previous/next song bar ---------- */
+try{localStorage.removeItem('ss_theme')}catch(e){}
+let showOn=false,prevDark=false,shPrev=null,shNext=null;
+const isDark=()=>document.documentElement.getAttribute('data-theme')==='gig';
+function updateShowBar(){
+ const v=getVisibleSongs(),i=cur?v.findIndex(s=>s.id===cur.id):-1;
+ shPrev=i>0?v[i-1]:null;shNext=i<v.length-1?v[i+1]:null;
+ $('#shPrev .sn').textContent=shPrev?shPrev.name:'Start of list';
+ $('#shNext .sn').textContent=shNext?shNext.name:'End of list';
+ $('#shPrev').disabled=!shPrev;$('#shNext').disabled=!shNext;
+}
+function setShow(on){
+ if(on===showOn)return;showOn=on;
+ document.body.classList.toggle('show',on);
+ $('#gigMode').classList.toggle('on',on);$('#gigMode').setAttribute('aria-pressed',on);
+ if(on){prevDark=isDark();document.documentElement.setAttribute('data-theme','gig');setLib(false);setSecEdit(false,true);updateShowBar()}
+ else if(!prevDark)document.documentElement.removeAttribute('data-theme');
+}
+$('#gigMode').onclick=()=>setShow(!showOn);
+$('#shPrev').onclick=()=>{if(shPrev)openSong(shPrev)};
+$('#shNext').onclick=()=>{if(shNext)openSong(shNext)};
 
 /* ---------- folders handling ---------- */
 function updateFolderSelect(){
@@ -340,7 +458,15 @@ $('#del-folder-btn').onclick=async ()=>{
 /* ---------- state ---------- */
 let songs=[],cur=null,pdf=null,playing=false,speed=defSpeed,zoom=1,token=0,cdTimer=null;
 const scroller=$('#scroller'),pagesEl=$('#pages');
-const spd=()=>mode==='bpm'?bpm/60*scroller.clientHeight/bps:4*Math.pow(1.04,speed);
+/* Speed is measured against the sheet itself (its width and page height), never the screen.
+   The sheet is laid out at the same width whether the library or rail is open, so the same
+   level or BPM scrolls the same amount of music per second on every device. */
+const REF_W=1000;
+let pgRatio=1.294;
+const layoutW=()=>Math.max(240,($('#app').clientWidth||innerWidth)-68);
+const SC=()=>(pw||layoutW())/REF_W;
+const pageH=()=>(pw||layoutW())*pgRatio;
+const spd=()=>mode==='bpm'?bpm/60/bps*pageH():4*Math.pow(1.04,speed)*SC();
 
 /* ---------- Export & Import (.sstg) ---------- */
 function blobToBase64(blob) {
@@ -383,6 +509,8 @@ $('#exportBtn').onclick = async () => {
         pos: s.pos,
         notes: s.notes,
         zones: s.zones,
+        secs: s.secs,
+        secOn: s.secOn,
         added: s.added,
         blobData: b64
       });
@@ -420,6 +548,8 @@ $('#importFile').onchange = async (e) => {
           pos: item.pos || 0,
           notes: item.notes || '',
           zones: Array.isArray(item.zones) ? item.zones : [],
+          secs: Array.isArray(item.secs) ? item.secs : [],
+          secOn: !!item.secOn,
           added: item.added || Date.now(),
           blob: item.blobData ? dataURItoBlob(item.blobData) : null
         };
@@ -478,6 +608,7 @@ function renderList(){
   l.appendChild(b);
  });
  $('#note').textContent=persistent?'':'Saving is unavailable here, so songs last until you close this tab.';
+ if(showOn)updateShowBar();
 }
 function narrow(){return innerWidth<900}
 function setLib(o){document.body.classList.toggle('lib-open',o);schedResize()}
@@ -505,7 +636,7 @@ let tmsg;function toast(t){const m=$('#msg');m.textContent=t;m.style.display='bl
 /* ---------- viewer ---------- */
 async function openSong(s){
  setPlaying(false);saveNow();
- const my=++token;cur=s;renderList();loadNotes();
+ const my=++token;cur=s;tap=null;selZone=null;syncSec();renderList();loadNotes();
  try{
   if(!s.blob&&s.assetId){toast('Downloading song…');const r=await fetch('/_blob/'+s.assetId);if(!r.ok)throw 0;s.blob=await r.blob();store.put(s)}
   const buf=await s.blob.arrayBuffer();
@@ -517,17 +648,17 @@ async function openSong(s){
   $('#welcome').style.display='none';
   await build(s.pos||0,my);
   renderList();
-  if(narrow())setLib(false);
+  setLib(false);
  }catch(e){toast('That PDF could not be opened.')}
 }
-function closeSong(){token++;cur=null;pdf=null;pagesEl.innerHTML='';renderZones();$('#welcome').style.display='grid';setPlaying(false);loadNotes()}
+function closeSong(){token++;cur=null;pdf=null;pagesEl.innerHTML='';tap=null;selZone=null;syncSec();renderZones();$('#welcome').style.display='grid';setPlaying(false);loadNotes()}
 
 let obs=null,pw=0;
 async function build(restore,my){
  if(obs)obs.disconnect();pagesEl.innerHTML='';
  const p1=await pdf.getPage(1),v1=p1.getViewport({scale:1});
  if(my!==token)return;
- pw=Math.round(scroller.clientWidth*zoom);const ratio=v1.height/v1.width;
+ pw=Math.round(layoutW()*zoom);const ratio=v1.height/v1.width;pgRatio=ratio;
  pagesEl.style.width=pw+'px';
  for(let i=1;i<=pdf.numPages;i++){const d=document.createElement('div');d.className='page';d.dataset.n=i;d.style.height=Math.round(pw*ratio)+'px';pagesEl.appendChild(d)}
  obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)renderPage(e.target,my)}),{root:scroller,rootMargin:'150% 0px'});
@@ -557,7 +688,7 @@ let last=0,pos=0,expect=0,hold=false,holdT,raf=0,lock=null;
 function pbMult(){
  if(!pbOn||pbAmt<=1)return 1;
  const pg=pagesEl.children;if(pg.length<2)return 1;
- const zone=Math.max(40,pg[0].offsetHeight*0.06);   // reach of the boost on each side of a page edge
+ const zone=pg[0].offsetHeight*0.06;   // reach of the boost on each side of a page edge
  const y=scroller.scrollTop+scroller.clientHeight*0.5; // reading line, middle of the screen
  let m=1;
  for(let i=1;i<pg.length;i++){
@@ -581,7 +712,7 @@ function tick(t){
  const dt=Math.min(.05,(t-last)/1000);last=t;
  if(!hold){
   if(Math.abs(scroller.scrollTop-expect)>2)pos=scroller.scrollTop;
-  pos+=spd()*pbMult()*secMult(dt)*dt;
+  pos+=(secOn()?secSpeed(dt):spd()*secMult(dt))*pbMult()*dt;
   const max=scroller.scrollHeight-scroller.clientHeight;
   if(pos>=max){scroller.scrollTop=max;setPlaying(false);return}
   scroller.scrollTop=pos;expect=scroller.scrollTop;
@@ -626,12 +757,12 @@ async function setPlaying(p){
 async function startPlayingEngine() {
  playing=true;$('#play').innerHTML=IC.pause;$('#play').classList.add('on');
  cancelAnimationFrame(raf);
- if(selZone){selZone=null;renderZones()}secCur=secTarget();pos=scroller.scrollTop;expect=pos;last=performance.now();raf=requestAnimationFrame(tick);
+ if(selZone){selZone=null;renderZones()}secCur=secTarget();secPxCur=secOn()?secTargetPx():0;liveSec=null;document.body.classList.add('playing');pos=scroller.scrollTop;expect=pos;last=performance.now();raf=requestAnimationFrame(tick);
  try{if(navigator.wakeLock)lock=await navigator.wakeLock.request('screen')}catch(e){}
 }
 
 function stopPlayingEngine() {
- playing=false;$('#play').innerHTML=IC.play;$('#play').classList.remove('on');
+ playing=false;$('#play').innerHTML=IC.play;$('#play').classList.remove('on');document.body.classList.remove('playing');setLive(null);
  cancelAnimationFrame(raf);
  try{if(lock){lock.release();lock=null}}catch(e){}
  saveNow();
@@ -664,12 +795,13 @@ function setSpeed(v,quiet){
 function nudge(d){setSpeed((mode==='bpm'?bpm:speed)+d)}
 function setMode(m){
  if(m===mode)return;
- const p=spd(),H=scroller.clientHeight||800;
+ const p=spd();
  mode=m;
- if(m==='bpm')bpm=Math.max(40,Math.min(200,Math.round(p*60*bps/H)));
- else speed=Math.max(1,Math.min(100,Math.round(Math.log(p/4)/Math.log(1.04))));
+ if(m==='bpm')bpm=Math.max(40,Math.min(200,Math.round(p*60*bps/pageH())));
+ else speed=Math.max(1,Math.min(100,Math.round(Math.log(p/SC()/4)/Math.log(1.04))));
  try{localStorage.setItem('ss_mode',m)}catch(e){}
  syncUnits();setSpeed(m==='bpm'?bpm:speed,true);renderList();
+ if(secOn()&&selZone)fillSecEdit();renderZones();
 }
 function setBps(n){bps=Math.max(8,Math.min(128,n));try{localStorage.setItem('ss_bps',bps)}catch(e){}$('#bpsv').textContent=bps;}
 function syncUnits(){document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.u===mode));$('#bpsrow').style.display=mode==='bpm'?'flex':'none';$('#bpsv').textContent=bps}
@@ -696,7 +828,7 @@ $('#fold').onclick=()=>{const m=$('#rail').classList.toggle('min');$('#fold').se
 let st;function schedSave(){clearTimeout(st);st=setTimeout(saveNow,500)}
 function saveNow(){if(!cur)return;cur.pos=scroller.scrollTop;cur.speed=speed;cur.bpm=bpm;cur.zoom=zoom;store.put(cur)}
 let rt,lw=0;
-function schedResize(){clearTimeout(rt);rt=setTimeout(()=>{if(!pdf)return;const w=scroller.clientWidth;if(Math.abs(w-lw)<3)return;lw=w;const r=scroller.scrollTop/(scroller.scrollHeight||1);const my=++token;build(0,my).then(()=>{scroller.scrollTop=r*scroller.scrollHeight;pos=scroller.scrollTop;expect=pos})},250)}
+function schedResize(){clearTimeout(rt);rt=setTimeout(()=>{if(!pdf)return;const w=layoutW();if(Math.abs(w-lw)<3)return;lw=w;const r=scroller.scrollTop/(scroller.scrollHeight||1);const my=++token;build(0,my).then(()=>{scroller.scrollTop=r*scroller.scrollHeight;pos=scroller.scrollTop;expect=pos})},250)}
 new ResizeObserver(()=>{setSpeed(mode==='bpm'?bpm:speed,true);schedResize()}).observe($('#stage'));
 addEventListener('pagehide',saveNow);
 
@@ -710,27 +842,260 @@ $('#nclose').onclick=()=>setNotes(false);
 
 nt.addEventListener('input',()=>{if(!cur)return;cur.notes=nt.value.slice(0,5000);schedSave()});
 
-/* ---------- speed brackets ---------- */
+/* ---------- speed brackets + section mode ---------- */
 const MIN_ZONE_PX=70;
-let selZone=null,zT;
+let selZone=null,zT,barZone=null,secPxCur=0,liveSec=null,secEditing=false;
 const fmtM=m=>(Math.round(m*100)/100)+'x';
 const zoneH=()=>scroller.scrollHeight||1;
+const secOn=()=>!!(cur&&cur.secOn);
+/* Z() is the active bracket list: song sections in section mode, the original multiplier brackets otherwise */
+const Z=()=>!cur?[]:secOn()?(cur.secs||(cur.secs=[])):(cur.zones||(cur.zones=[]));
+
+/* Each section keeps its own speed as both a level (sp) and a BPM (bp), just like songs do,
+   so it plays the same pace on every device in either unit. */
+const lvlPx=l=>4*Math.pow(1.04,l)*SC();
+const pxLvl=p=>Math.max(1,Math.min(100,Math.round(Math.log(p/SC()/4)/Math.log(1.04)*10)/10));
+const pxBpm=p=>Math.max(40,Math.min(200,Math.round(p*60*bps/pageH())));
+const bpmPx=b=>b/60*pageH()/bps;
+const curPair=()=>{const p=spd();return{sp:pxLvl(p),bp:pxBpm(p)}};
+function zFix(z){if(typeof z.sp!=='number'||typeof z.bp!=='number'){const c=curPair();if(typeof z.sp!=='number')z.sp=c.sp;if(typeof z.bp!=='number')z.bp=c.bp}return z}
+const zPx=z=>{zFix(z);return mode==='bpm'?bpmPx(z.bp):lvlPx(z.sp)};
+function setSecLevel(z,l){z.sp=Math.max(1,Math.min(100,Math.round(l*10)/10));z.bp=pxBpm(lvlPx(z.sp))}
+function setSecBpm(z,b){z.bp=Math.max(40,Math.min(200,Math.round(b)));z.sp=pxLvl(bpmPx(z.bp))}
+const spShown=z=>{zFix(z);return mode==='bpm'?Math.round(z.bp):Math.round(z.sp)};
+const secLabel=z=>(z.name||'Section')+' · '+spShown(z)+(mode==='bpm'?' BPM':'');
+const baseName=z=>(z.name||'Section').replace(/\s*\d+\s*$/,'').trim()||'Section';
+
+/* playback: which section is under the reading line, and how fast to go */
+function secFind(){
+ if(!cur||!cur.secs||!cur.secs.length)return null;
+ const f=(scroller.scrollTop+scroller.clientHeight*0.5)/(scroller.scrollHeight||1);
+ let r=null;for(const z of cur.secs){if(f>=z.a&&f<=z.b)r=z}
+ return r;
+}
+function secTargetPx(){const z=secFind();return z?zPx(z):spd()}
+function setLive(z){
+ if(z===liveSec)return;liveSec=z;
+ document.querySelectorAll('#mk .zb').forEach(c=>c.classList.toggle('live',c._z===z));
+}
+/* eases toward the section's speed so changes never jolt; outside any section it uses the rail slider's speed */
+function secSpeed(dt){
+ const z=secFind();setLive(z);
+ const t=z?zPx(z):spd();
+ secPxCur+=(t-secPxCur)*Math.min(1,dt*5);
+ return secPxCur;
+}
+
+/* ---------- section bar ---------- */
+function syncSec(){
+ const on=secOn();
+ document.body.classList.toggle('sec-on',on);$('#secBtn').classList.toggle('on',on);
+ secEditing=false;document.body.classList.remove('sec-edit');   // a song always opens locked
+ document.querySelectorAll('#secMode button').forEach(b=>b.classList.toggle('on',b.dataset.m==='view'));
+}
+/* View locks everything so nothing moves by accident; Edit unlocks the steppers, sliders and handles. */
+function setSecEdit(v,quiet){
+ if(v&&!secOn())return;
+ if(v&&showOn){if(!quiet)toast('Turn off Show mode to edit sections.');v=false}
+ secEditing=!!v;
+ document.body.classList.toggle('sec-edit',secEditing);
+ document.querySelectorAll('#secMode button').forEach(b=>b.classList.toggle('on',(b.dataset.m==='edit')===secEditing));
+ if(!secEditing){selZone=null;tap=null;tapUI()}
+ renderZones();
+}
+document.querySelectorAll('#secMode button').forEach(b=>b.onclick=()=>setSecEdit(b.dataset.m==='edit'));
+/* press and hold a stepper to keep changing the speed */
+function holdRepeat(btn,fn){
+ let t1,t2;
+ const stop=()=>{clearTimeout(t1);clearInterval(t2)};
+ btn.addEventListener('pointerdown',e=>{
+  e.preventDefault();e.stopPropagation();fn();
+  t1=setTimeout(()=>{t2=setInterval(fn,110)},380);
+  addEventListener('pointerup',stop,{once:true});addEventListener('pointercancel',stop,{once:true});
+ });
+ btn.addEventListener('pointerleave',stop);
+}
+/* nudge one section's speed in place, without redrawing, so holding a stepper keeps working */
+function stepSec(z,d,el){
+ const v=spShown(z)+d;
+ if(mode==='bpm')setSecBpm(z,v);else setSecLevel(z,v);
+ const zv=el&&el.querySelector('.zv');if(zv)zv.textContent=spShown(z)+(mode==='bpm'?' bpm':'');
+ if(z===selZone)fillSecEdit();
+ schedSave();
+}
+function fillSecEdit(){
+ const z=selZone;if(!z)return;zFix(z);
+ const bp=mode==='bpm',r=$('#secSp');
+ r.min=bp?40:1;r.max=bp?200:100;r.step=1;r.value=spShown(z);
+ $('#secVal').textContent=spShown(z)+(bp?' BPM':'');
+ $('#secName').value=z.name||'';updTime();
+ $('#secAll').textContent='Same speed for all “'+baseName(z)+'”';
+ const b=baseName(z).toLowerCase();$('#secAll').style.display=Z().filter(o=>baseName(o).toLowerCase()===b).length>1?'':'none';
+}
+function renderSecBar(){
+ const on=secOn(),sel=on&&secEditing&&selZone&&Z().includes(selZone)?selZone:null;
+ $('#secbar').classList.toggle('has-sel',!!sel);
+ if(sel!==barZone){barZone=sel;if(sel)fillSecEdit()}else if(sel)updTime();
+}
+function fillSecEdit_all(){const z=selZone;if(!z)return;$('#secAll').textContent='Same speed for all “'+baseName(z)+'”';const b=baseName(z).toLowerCase();$('#secAll').style.display=Z().filter(o=>baseName(o).toLowerCase()===b).length>1?'':'none'}
+function setSecVal(v){
+ const z=selZone;if(!z)return;
+ if(mode==='bpm')setSecBpm(z,v);else setSecLevel(z,v);
+ $('#secSp').value=spShown(z);$('#secVal').textContent=spShown(z)+(mode==='bpm'?' BPM':'');updTime();
+ schedSave();renderZones();
+}
+$('#secSp').oninput=e=>setSecVal(+e.target.value);
+$('#secDn').onclick=()=>{if(selZone)setSecVal(spShown(selZone)-1)};
+$('#secUp').onclick=()=>{if(selZone)setSecVal(spShown(selZone)+1)};
+$('#secName').oninput=e=>{
+ if(!selZone)return;
+ selZone.name=e.target.value.slice(0,24);
+ fillSecEdit_all();
+ schedSave();renderZones();
+};
+$('#secAll').onclick=()=>{
+ const z=selZone;if(!z)return;
+ const b=baseName(z).toLowerCase();let n=0;
+ Z().forEach(o=>{if(baseName(o).toLowerCase()===b){o.sp=z.sp;o.bp=z.bp;n++}});
+ schedSave();renderZones();toast('Set '+n+' “'+baseName(z)+'” section'+(n===1?'':'s')+' to '+spShown(z)+(mode==='bpm'?' BPM':'')+'.');
+};
+$('#secDel').onclick=()=>{
+ if(!selZone)return;
+ cur.secs=(cur.secs||[]).filter(x=>x!==selZone);selZone=null;commitZones();
+};
+$('#secClear').onclick=()=>{
+ if(!cur||!(cur.secs&&cur.secs.length))return;
+ if(!confirm('Remove all sections from this song?'))return;
+ cur.secs=[];selZone=null;commitZones();
+};
+$('#secAdd').onclick=()=>$('#zadd').click();
+$('#secBtn').onclick=()=>{
+ if(!cur){toast('Open a PDF first.');return}
+ cur.secOn=!cur.secOn;selZone=null;schedSave();syncSec();
+ if(cur.secOn)setSecEdit(!(cur.secs&&cur.secs.length),true);else renderZones();
+ if(playing){secPxCur=secOn()?secTargetPx():0;liveSec=null}
+ toast(cur.secOn?(cur.secs&&cur.secs.length?'Section mode on. Tap Edit to change speeds.':'Section mode on. Tap Detect to find the sections.'):'Section mode off. Back to one speed.');
+};
+
+/* ---------- match the real song's timing ---------- */
+const secLen=z=>(z.b-z.a)*zoneH();                       // section length in px
+const fmtT=s=>{s=Math.max(0,Math.round(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+function updTime(){const z=selZone;if(!z||!z.b)return;$('#secTime').value=fmtT(secLen(z)/zPx(z))}
+/* sets the speed so the section scrolls past in exactly `secs` seconds; returns false if the speed range can't reach it */
+function setSecDur(z,secs){
+ const px=secLen(z)/secs;
+ if(mode==='bpm')setSecBpm(z,pxBpm(px));else setSecLevel(z,pxLvl(px));
+ return Math.abs(zPx(z)-px)/px<.05;
+}
+function parseT(v){
+ v=String(v).trim();if(!v)return 0;
+ if(v.includes(':')){const [m,s]=v.split(':');return (+m||0)*60+(+s||0)}
+ return +v||0;
+}
+$('#secTime').onchange=e=>{
+ const z=selZone;if(!z)return;
+ const secs=parseT(e.target.value);
+ if(secs<2){updTime();toast('Enter a length like 0:45.');return}
+ const ok=setSecDur(z,secs);
+ fillSecEdit();schedSave();renderZones();
+ if(!ok)toast('That is outside the speed range, so it was set to the closest speed.');
+};
+let tap=null;
+function tapUI(){
+ const bar=$('#secbar'),zs=cur&&cur.secs||[];
+ bar.classList.toggle('tapping',!!tap);
+ if(!tap)return;
+ $('#secTapNext').textContent=tap.i<zs.length?'Tap when “'+(zs[tap.i].name||'Section')+'” starts':'Tap when the song ends';
+}
+$('#secTap').onclick=()=>{
+ if(!cur||!(cur.secs&&cur.secs.length)){toast('Tap Detect or add sections first.');return}
+ tap={i:0,t:[]};selZone=null;renderZones();tapUI();
+ toast('Start the real song, then tap at the start of each section.');
+};
+$('#secTapCancel').onclick=()=>{tap=null;tapUI()};
+$('#secTapNext').onclick=()=>{
+ if(!tap)return;
+ tap.t.push(performance.now());tap.i++;
+ const zs=cur.secs;
+ if(tap.i<=zs.length){tapUI();return}
+ let bad=0;
+ zs.forEach((z,k)=>{const d=(tap.t[k+1]-tap.t[k])/1000;if(d<1){bad++;return}if(!setSecDur(z,d))bad++});
+ tap=null;tapUI();selZone=null;commitZones();
+ toast(bad?'Timed. '+bad+' section'+(bad===1?' was':'s were')+' too short or outside the speed range, so check them.':'Done. Every section now lasts as long as the real one.');
+};
+
+/* ---------- auto-detect sections from the PDF text ---------- */
+const SEC_RE=/^[\[\(\{<*#\-\s]*(?:(?:final|last|double|extended|1st|2nd|3rd)\s+)?(?:introduction|intro|pre[- ]?chorus|post[- ]?chorus|chorus|verse|refrain|bridge|tag|outro|ending|interlude|instrumental|instr|solo|turnaround|vamp|hook|coda|breakdown|reprise|rap|channel)(?:\s*[-:]?\s*\d{1,2}[a-d]?|\s+[a-d])?(?:\s*\([^)]{0,20}\))?(?:\s*[-–]?\s*(?:x\s*\d+|\d+\s*x|repeat))?[\]\)\}>*\s:.\-]*$/i;
+function cleanName(t){
+ t=t.replace(/[\[\]\(\)\{\}<>*#:]/g,' ').replace(/\s*[-–]?\s*(x\s*\d+|\d+\s*x|repeat)\s*$/i,'').replace(/^[-–.\s]+|[-–.\s]+$/g,'').replace(/\s+/g,' ').trim();
+ return t.toLowerCase().replace(/(^|[\s-])([a-z])/g,(m,p,c)=>p+c.toUpperCase());
+}
+async function detectSections(){
+ if(!pdf||!cur){toast('Open a PDF first.');return}
+ if(cur.secs&&cur.secs.length&&!confirm('Replace the current sections with auto-detected ones?'))return;
+ toast('Looking for section labels…');
+ const my=token,found=[],H=zoneH();
+ try{
+  for(let i=1;i<=pdf.numPages;i++){
+   const pg=await pdf.getPage(i);if(my!==token)return;
+   const vp=pg.getViewport({scale:1}),tc=await pg.getTextContent();if(my!==token)return;
+   const el=pagesEl.children[i-1];if(!el)continue;
+   const its=tc.items.filter(t=>t.str&&t.str.trim()).map(t=>{
+    const p=vp.convertToViewportPoint(t.transform[4],t.transform[5]);
+    return{s:t.str,x:p[0],y:p[1],w:t.width||0,h:Math.abs(t.height)||Math.abs(t.transform[3])||10};
+   });
+   its.sort((p,q)=>p.y-q.y);
+   const lines=[];
+   for(const t of its){const L=lines[lines.length-1];if(L&&Math.abs(t.y-L.y)<Math.max(2,t.h*.4))L.it.push(t);else lines.push({y:t.y,h:t.h,it:[t]})}
+   for(const L of lines){
+    L.it.sort((p,q)=>p.x-q.x);
+    let txt='';L.it.forEach((t,k)=>{if(k){const pr=L.it[k-1];if(t.x-(pr.x+pr.w)>t.h*.25)txt+=' '}txt+=t.s});
+    txt=txt.replace(/\s+/g,' ').trim();
+    if(txt.length>32||!SEC_RE.test(txt))continue;
+    const top=el.offsetTop+Math.max(0,L.y-L.h*1.2)/vp.height*el.offsetHeight;
+    const a=Math.max(0,Math.min(.999,top/H));
+    if(found.length&&Math.abs(a-found[found.length-1].a)<.002)continue;
+    found.push({a,name:cleanName(txt)||'Section'});
+   }
+  }
+ }catch(e){toast('Could not read the text in this PDF.');return}
+ if(my!==token)return;
+ if(!found.length){toast('No section labels found (scanned PDFs have no text). Add sections with the bracket button instead.');return}
+ const pr=curPair();
+ cur.secs=found.map((f,i)=>({a:+f.a.toFixed(5),b:+(i<found.length-1?found[i+1].a:1).toFixed(5),name:f.name,sp:pr.sp,bp:pr.bp}));
+ selZone=null;commitZones();
+ toast('Found '+found.length+' section'+(found.length===1?'':'s')+'. Tap one to set its speed.');
+}
+$('#secAuto').onclick=detectSections;
+
+/* ---------- bracket drawing + dragging ---------- */
 function schedZones(){clearTimeout(zT);zT=setTimeout(renderZones,250)}
 function commitZones(){schedSave();renderZones()}
 function placeZone(el,z){const H=zoneH();el.style.top=Math.round(z.a*H)+'px';el.style.height=Math.max(MIN_ZONE_PX,Math.round((z.b-z.a)*H))+'px'}
 
 function renderZones(){
  const mk=$('#mk');mk.innerHTML='';
- if(!cur||!cur.zones||!cur.zones.length)return;
- cur.zones.forEach(z=>{
-  const el=document.createElement('div');el.className='zb'+(z===selZone?' sel':'');
-  el.innerHTML='<div class="zbar" aria-label="Speed bracket, drag to move"><span class="zchip"></span></div><div class="zh ztop" aria-label="Drag to change where it starts"></div><div class="zh zbot" aria-label="Drag to change where it ends"></div>';
-  el.querySelector('.zchip').textContent=fmtM(z.m);
+ renderSecBar();
+ const zs=Z();
+ if(!cur||!zs.length)return;
+ const sec=secOn();
+ zs.forEach((z,i)=>{
+  const el=document.createElement('div');el._z=z;
+  el.className='zb'+(sec?' sec':'')+(sec&&i%2?' alt':'')+(z===selZone?' sel':'')+(sec&&playing&&z===liveSec?' live':'');
+  el.innerHTML='<div class="zbar" aria-label="Bracket, drag to move"><span class="zchip"></span></div><div class="zh ztop" aria-label="Drag to change where it starts"></div><div class="zh zbot" aria-label="Drag to change where it ends"></div>';
+  const chip=el.querySelector('.zchip');
+  if(sec){
+   chip.innerHTML='<span class="zn"></span><span class="zr"><button class="zm" aria-label="Slower">−</button><b class="zv"></b><button class="zp" aria-label="Faster">+</button></span>';
+   chip.querySelector('.zn').textContent=z.name||'Section';
+   chip.querySelector('.zv').textContent=spShown(z)+(mode==='bpm'?' bpm':'');
+   holdRepeat(chip.querySelector('.zm'),()=>stepSec(z,-1,el));
+   holdRepeat(chip.querySelector('.zp'),()=>stepSec(z,1,el));
+  }else chip.textContent=fmtM(z.m);
   placeZone(el,z);
   el.querySelector('.zbar').addEventListener('pointerdown',e=>dragZone(z,'move',e,el));
   el.querySelector('.ztop').addEventListener('pointerdown',e=>dragZone(z,'top',e,el));
   el.querySelector('.zbot').addEventListener('pointerdown',e=>dragZone(z,'bot',e,el));
-  if(z===selZone){
+  if(z===selZone&&!sec){
    const t=document.createElement('div');t.className='ztool';
    t.innerHTML='<button class="zdn" aria-label="Slower">−</button><b></b><button class="zup" aria-label="Faster">+</button><button class="zdel" aria-label="Delete bracket">×</button>';
    t.querySelector('b').textContent=fmtM(z.m);
@@ -747,12 +1112,21 @@ function dragZone(z,kind,e,el){
  e.preventDefault();
  const tgt=e.currentTarget;try{tgt.setPointerCapture(e.pointerId)}catch(x){}
  const H0=zoneH(),minF=MIN_ZONE_PX/H0,y0=e.clientY,a0=z.a,b0=z.b,s0=scroller.scrollTop;
+ /* in section mode, dragging a shared boundary moves the neighbouring section's edge too */
+ const zs=Z(),link=secOn();
+ const prev=link&&kind==='top'?zs.find(p=>p!==z&&Math.abs(p.b-a0)<.003):null;
+ const next=link&&kind==='bot'?zs.find(n=>n!==z&&Math.abs(n.a-b0)<.003):null;
+ const elOf=q=>[...$('#mk').children].find(c=>c._z===q);
  let cy=e.clientY,moved=false,rafE=0;
  const apply=()=>{
   const df=((cy-y0)+(scroller.scrollTop-s0))/H0,len=b0-a0;
-  if(kind==='top')z.a=Math.max(0,Math.min(z.b-minF,a0+df));
-  else if(kind==='bot')z.b=Math.min(1,Math.max(z.a+minF,b0+df));
-  else{const na=Math.max(0,Math.min(1-len,a0+df));z.a=na;z.b=na+len}
+  if(kind==='top'){
+   z.a=Math.max(prev?prev.a+minF:0,Math.min(z.b-minF,a0+df));
+   if(prev){prev.b=z.a;const pe=elOf(prev);if(pe)placeZone(pe,prev)}
+  }else if(kind==='bot'){
+   z.b=Math.min(next?next.b-minF:1,Math.max(z.a+minF,b0+df));
+   if(next){next.a=z.b;const ne=elOf(next);if(ne)placeZone(ne,next)}
+  }else{const na=Math.max(0,Math.min(1-len,a0+df));z.a=na;z.b=na+len}
   placeZone(el,z);
  };
  const edge=()=>{ // scroll the page when a handle is dragged near the top or bottom of the screen
@@ -765,8 +1139,9 @@ function dragZone(z,kind,e,el){
   tgt.removeEventListener('pointermove',mv);tgt.removeEventListener('pointerup',up);tgt.removeEventListener('pointercancel',up);
   cancelAnimationFrame(rafE);
   z.a=+z.a.toFixed(5);z.b=+z.b.toFixed(5);
+  if(prev)prev.b=z.a;if(next)next.a=z.b;
   if(kind==='move'&&!moved&&selZone===z)selZone=null;else selZone=z;
-  cur.zones.sort((p,q)=>p.a-q.a);
+  zs.sort((p,q)=>p.a-q.a);
   commitZones();
  };
  tgt.addEventListener('pointermove',mv);tgt.addEventListener('pointerup',up);tgt.addEventListener('pointercancel',up);
@@ -775,14 +1150,16 @@ function dragZone(z,kind,e,el){
 
 $('#zadd').onclick=()=>{
  if(!cur){toast('Open a PDF first.');return}
+ if(secOn()&&!secEditing){toast('Tap Edit to add sections.');return}
  const H=zoneH(),len=Math.min(.5,Math.max(MIN_ZONE_PX/H,scroller.clientHeight*0.4/H));
  const mid=(scroller.scrollTop+scroller.clientHeight*0.5)/H;
  let a=Math.max(0,Math.min(1-len,mid-len/2));
- const zs=cur.zones||[];
+ const zs=Z(),sec=secOn();
  for(let i=0;i<zs.length;i++){const k=zs[i];if(a<k.b&&a+len>k.a){a=k.b+.004;i=-1}} // slide past any bracket already here
  if(a+len>1){toast('No room here. Scroll to another part of the song.');return}
- const z={a:+a.toFixed(5),b:+(a+len).toFixed(5),m:1.5};
- (cur.zones||(cur.zones=[])).push(z);cur.zones.sort((p,q)=>p.a-q.a);
+ const pr=curPair();
+ const z=sec?{a:+a.toFixed(5),b:+(a+len).toFixed(5),name:'Section '+(zs.length+1),sp:pr.sp,bp:pr.bp}:{a:+a.toFixed(5),b:+(a+len).toFixed(5),m:1.5};
+ zs.push(z);zs.sort((p,q)=>p.a-q.a);
  selZone=z;commitZones();
 };
 scroller.addEventListener('pointerdown',e=>{if(selZone&&!(e.target.closest&&e.target.closest('.zb'))){selZone=null;renderZones()}});
@@ -814,7 +1191,7 @@ addEventListener('keydown',e=>{
  songs.sort((a,b)=>(a.added||0)-(b.added||0));
  renderList();
  if(narrow()&&songs.length)setLib(false);
- lw=scroller.clientWidth;
+ lw=layoutW();
 })();
 })();
 </script>
