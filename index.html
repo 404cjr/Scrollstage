@@ -1252,7 +1252,7 @@ const gSync=(()=>{
     return new Promise((res,rej)=>{
       tokenClient=google.accounts.oauth2.initTokenClient({
         client_id:clientId(),scope:SCOPE,
-        callback:r=>{if(r.error)return rej(new Error(r.error_description||r.error));gTok=r.access_token;gExp=Date.now()+(+r.expires_in||3600)*1000;res(gTok)},
+        callback:r=>{if(r.error)return rej(new Error(r.error_description||r.error));if(!google.accounts.oauth2.hasGrantedAllScopes(r,'https://www.googleapis.com/auth/drive.appdata'))return rej(new Error('Drive permission was not granted. Tap Sign in again and tick the Drive checkbox on Google\u2019s screen'));gTok=r.access_token;gExp=Date.now()+(+r.expires_in||3600)*1000;res(gTok)},
         error_callback:e=>rej(new Error(e&&e.type||'popup_closed'))
       });
       tokenClient.requestAccessToken({prompt:interactive?(LS('ss_gin')?'':'consent'):'none',hint:gEmail||undefined});
@@ -1262,7 +1262,12 @@ const gSync=(()=>{
     const t=await getToken(false);
     const r=await fetch(path,{...opt,headers:{...(opt.headers||{}),Authorization:'Bearer '+t}});
     if(r.status===401){gTok=null;throw new Error('Session expired. Tap Sync now.')}
-    if(!r.ok)throw new Error('Google Drive error '+r.status);
+    if(!r.ok){
+      let why='';try{const j=await r.json();why=(j.error&&(j.error.message||j.error.status))||''}catch(e){}
+      if(r.status===403&&/not been used|disabled|accessNotConfigured/i.test(why))why='The Google Drive API is not enabled for this project (APIs & Services → Library → Google Drive API → Enable)';
+      else if(r.status===403&&/scope|insufficient/i.test(why))why='Drive permission was not granted. Sign out, sign in again, and tick the Drive checkbox on Google\u2019s screen';
+      throw new Error('Google Drive error '+r.status+(why?': '+why:''));
+    }
     return r;
   }
   async function listRemote(){
