@@ -268,7 +268,6 @@ body.lib-open #scrim{display:block;position:absolute;inset:0;background:rgba(0,0
       </div>
       <div class="gsync">
         <div class="gtitle">Google account sync</div>
-        <input type="text" id="gClient" placeholder="Google Client ID (…apps.googleusercontent.com)" autocomplete="off" spellcheck="false">
         <div id="gStatus">Not signed in</div>
         <button class="btn-sec" id="gSignIn">Sign in with Google</button>
         <div class="sync-row"><button class="btn-sec" id="gSyncNow">Sync now</button><button class="btn-sec" id="gSignOut">Sign out</button></div>
@@ -1222,7 +1221,8 @@ const gSync=(()=>{
   const SCOPE='https://www.googleapis.com/auth/drive.appdata openid email';
   const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){return null}};
   let tokenClient=null,gTok=null,gExp=0,gEmail=LS('ss_gemail')||'',busy=false,dirty=false,timer=null;
-  const clientId=()=>(LS('ss_gclient')||'').trim();
+  const CLIENT_ID='819333683499-4f1hrmkp39r9homus8tfaq6vphb6d8uq.apps.googleusercontent.com';   // public identifier, safe to ship
+  const clientId=()=>String(CLIENT_ID||LS('ss_gclient')||'').trim().replace(/^https?:\/\//i,'').replace(/\/+$/,'').replace(/\s+/g,'');
   const rec=()=>{try{return JSON.parse(LS('ss_gsync')||'{}')}catch(e){return{}}};   // {songId:{sig,mid,pid}}
   const saveRec=r=>LS('ss_gsync',JSON.stringify(r));
   const tombs=()=>{try{return JSON.parse(LS('ss_gtomb')||'[]')}catch(e){return[]}};
@@ -1234,10 +1234,9 @@ const gSync=(()=>{
   function refreshUI(){
     if(!ui.st)return;
     const signed=!!LS('ss_gin');
-    ui.id.value=clientId();
     ui.signin.style.display=signed?'none':'';
     ui.now.style.display=ui.out.style.display=signed?'':'none';
-    if(!signed)setStatus(clientId()?'Not signed in':'Paste your Google Client ID, then sign in');
+    if(!signed)setStatus('Not signed in');
     else setStatus('Signed in'+(gEmail?' as '+gEmail:''));
   }
   function loadGIS(){
@@ -1390,9 +1389,8 @@ const gSync=(()=>{
   }
   function addTomb(id){if(!LS('ss_gin'))return;const t=tombs();if(!t.includes(id))t.push(id);LS('ss_gtomb',JSON.stringify(t));const R=rec();delete R[id];saveRec(R);sched()}
   function init(){
-    ui.id=$('#gClient');ui.signin=$('#gSignIn');ui.now=$('#gSyncNow');ui.out=$('#gSignOut');ui.st=$('#gStatus');
-    ui.id.onchange=()=>{LS('ss_gclient',ui.id.value.trim());refreshUI()};
-    ui.signin.onclick=()=>{LS('ss_gclient',ui.id.value.trim());signIn()};
+    ui.signin=$('#gSignIn');ui.now=$('#gSyncNow');ui.out=$('#gSignOut');ui.st=$('#gStatus');
+    ui.signin.onclick=signIn;
     ui.now.onclick=()=>sync(true);ui.out.onclick=signOut;
     refreshUI();
     if(LS('ss_gin')&&clientId())sync(false);   // quiet sync on app open
