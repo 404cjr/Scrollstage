@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700&display=swap" rel="stylesheet">
 
-<!-- Inline Custom Favicon -->a
+<!-- Inline Custom Favicon -->
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%230b1329' stroke='%2338bdf8' stroke-width='4'/><path d='M40 28 L72 50 L40 72 Z' fill='%2338bdf8'/><path d='M42 54 A10 10 0 1 0 52 64 L52 36 L66 36' fill='none' stroke='%230b1329' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/></svg>">
 
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -86,6 +86,8 @@ body.lib-open #lib{margin-left:0}
 .zb.sel .zbar{background:color-mix(in srgb,var(--a2) 30%,transparent);box-shadow:0 0 14px var(--glow)}
 .zchip{position:absolute;top:50%;right:100%;transform:translate(-4px,-50%);background:var(--a2);color:var(--on);font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
 .zb.sel .zchip{display:none}
+/* labels ("Chorus · 25", "1.5x") hidden; they only show while editing sections */
+body:not(.sec-edit) .zchip{display:none!important}
 .zh{position:absolute;right:-8px;width:40px;height:40px;pointer-events:auto;touch-action:none;cursor:ns-resize}
 .zh::after{content:"";position:absolute;left:50%;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:var(--ink);border:3px solid var(--a2);box-shadow:0 1px 6px var(--glow)}
 .ztop{top:-20px}.zbot{bottom:-20px}
@@ -113,6 +115,8 @@ body:not(.sec-edit) .zb.sec .zbar{pointer-events:none}
 .zb.sec.live .zbar{background:color-mix(in srgb,var(--a2) 38%,transparent);box-shadow:0 0 16px var(--glow)}
 #secbar{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:8;display:none;flex-direction:column;gap:8px;width:calc(100% - 20px);max-width:520px;padding:8px 10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 6px 20px rgba(0,0,0,.35);font-size:13px}
 body.sec-on:not(.playing) #secbar{display:flex}
+/* Section mode sets speed per section, so hide the rail's speed slider */
+body.sec-on #vs{display:none}
 #secbar .sb-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 #secbar b{font-weight:700;margin-right:2px}
 #secbar button{padding:7px 11px;border-radius:9px;font-weight:600;background:color-mix(in srgb,var(--ink) 8%,transparent);border:1px solid var(--line);min-height:34px}
@@ -238,6 +242,9 @@ body.lib-open #scrim{display:block;position:absolute;inset:0;background:rgba(0,0
         <div class="seg" id="seg"><button data-u="lvl">Level</button><button data-u="bpm">BPM</button></div>
         <div class="bps" id="bpsrow" title="How many beats go by while the sheet scrolls one page"><span>Beats per page</span><div><button id="bm" aria-label="Fewer beats per page">−</button><b id="bpsv">32</b><button id="bp" aria-label="More beats per page">+</button></div></div>
         <div class="hint">Speed is measured against the sheet, not the screen, so it plays the same on iPhone, iPad, Android, Windows and Mac.</div>
+      </div>
+      <div class="pb-amt" title="Makes the sheet bigger on this device only. Scroll speed stays the same relative to the music.">
+        <span>Sheet size</span><input type="range" id="devScale" min="1" max="3" step="0.1" aria-label="Sheet size on this device"><b id="devScaleV">1.6x</b>
       </div>
       <div class="toggle-row">
         <span>3s Lead-In Countdown</span>
@@ -463,7 +470,13 @@ const scroller=$('#scroller'),pagesEl=$('#pages');
    level or BPM scrolls the same amount of music per second on every device. */
 const REF_W=1000;
 let pgRatio=1.294;
-const layoutW=()=>Math.max(240,($('#app').clientWidth||innerWidth)-68);
+/* Sheet size on this device. Phones/tablets default larger so the notes are readable;
+   speed is tied to the sheet width (SC/pageH), so the music still moves at the same relative speed. */
+let devScale=1;
+try{const v=parseFloat(localStorage.getItem('ss_devscale'));devScale=v>=1&&v<=3?v:(Math.min(screen.width,screen.height)<900?1.6:1)}catch(e){}
+const layoutW=()=>Math.max(240,(($('#app').clientWidth||innerWidth)-68)*devScale);
+/* Speed is tied to the sheet width (and page height), so one page takes the same number of seconds
+   on every device and at every sheet size. Same musical speed everywhere. */
 const SC=()=>(pw||layoutW())/REF_W;
 const pageH=()=>(pw||layoutW())*pgRatio;
 const spd=()=>mode==='bpm'?bpm/60/bps*pageH():4*Math.pow(1.04,speed)*SC();
@@ -663,7 +676,8 @@ async function build(restore,my){
  for(let i=1;i<=pdf.numPages;i++){const d=document.createElement('div');d.className='page';d.dataset.n=i;d.style.height=Math.round(pw*ratio)+'px';pagesEl.appendChild(d)}
  obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)renderPage(e.target,my)}),{root:scroller,rootMargin:'150% 0px'});
  [...pagesEl.children].forEach(c=>obs.observe(c));
- scroller.scrollTop=typeof restore==='number'?restore:0;pos=scroller.scrollTop;expect=pos;
+ scroller.scrollTop=typeof restore==='number'?restore:Math.max(0,firstSecTop());pos=scroller.scrollTop;expect=pos;
+ scroller.scrollLeft=Math.max(0,(scroller.scrollWidth-scroller.clientWidth)/2);
  renderZones();
 }
 async function renderPage(el,my){
@@ -757,7 +771,8 @@ async function setPlaying(p){
 async function startPlayingEngine() {
  playing=true;$('#play').innerHTML=IC.pause;$('#play').classList.add('on');
  cancelAnimationFrame(raf);
- if(selZone){selZone=null;renderZones()}secCur=secTarget();secPxCur=secOn()?secTargetPx():0;liveSec=null;document.body.classList.add('playing');pos=scroller.scrollTop;expect=pos;last=performance.now();raf=requestAnimationFrame(tick);
+ if(selZone){selZone=null;renderZones()}{const ft=firstSecTop();if(ft>=0&&scroller.scrollTop+scroller.clientHeight*0.5<ft+12)scroller.scrollTop=ft} /* start from the first section */
+ secCur=secTarget();secPxCur=secOn()?secTargetPx():0;liveSec=null;document.body.classList.add('playing');pos=scroller.scrollTop;expect=pos;last=performance.now();raf=requestAnimationFrame(tick);
  try{if(navigator.wakeLock)lock=await navigator.wakeLock.request('screen')}catch(e){}
 }
 
@@ -824,6 +839,11 @@ $('#zin').onclick=()=>setZoom(zoom+.2);$('#zout').onclick=()=>setZoom(zoom-.2);
 $('#top').onclick=()=>{scroller.scrollTop=0;pos=0;expect=0};
 $('#fold').onclick=()=>{const m=$('#rail').classList.toggle('min');$('#fold').setAttribute('aria-label',m?'Show controls':'Hide controls');schedResize()};
 
+/* ---------- sheet size (per device) ---------- */
+{const r=$('#devScale'),v=$('#devScaleV');
+ r.value=devScale;v.textContent=devScale.toFixed(1)+'x';
+ r.oninput=()=>{devScale=+r.value;v.textContent=devScale.toFixed(1)+'x';try{localStorage.setItem('ss_devscale',devScale)}catch(e){}schedResize()}}
+
 /* ---------- save + resize ---------- */
 let st;function schedSave(){clearTimeout(st);st=setTimeout(saveNow,500)}
 function saveNow(){if(!cur)return;cur.pos=scroller.scrollTop;cur.speed=speed;cur.bpm=bpm;cur.zoom=zoom;store.put(cur)}
@@ -844,6 +864,9 @@ nt.addEventListener('input',()=>{if(!cur)return;cur.notes=nt.value.slice(0,5000)
 
 /* ---------- speed brackets + section mode ---------- */
 const MIN_ZONE_PX=70;
+const minZonePx=()=>secOn()?24:MIN_ZONE_PX; /* section brackets can be short, so neighbours don't overlap */
+/* where the first section starts (px), or -1 */
+function firstSecTop(){if(!secOn()||!cur||!cur.secs||!cur.secs.length)return -1;return Math.max(0,Math.round(Math.min(...cur.secs.map(z=>z.a))*zoneH())-12)}
 let selZone=null,zT,barZone=null,secPxCur=0,liveSec=null,secEditing=false;
 const fmtM=m=>(Math.round(m*100)/100)+'x';
 const zoneH=()=>scroller.scrollHeight||1;
@@ -1071,7 +1094,7 @@ $('#secAuto').onclick=detectSections;
 /* ---------- bracket drawing + dragging ---------- */
 function schedZones(){clearTimeout(zT);zT=setTimeout(renderZones,250)}
 function commitZones(){schedSave();renderZones()}
-function placeZone(el,z){const H=zoneH();el.style.top=Math.round(z.a*H)+'px';el.style.height=Math.max(MIN_ZONE_PX,Math.round((z.b-z.a)*H))+'px'}
+function placeZone(el,z){const H=zoneH();el.style.top=Math.round(z.a*H)+'px';el.style.height=Math.max(minZonePx(),Math.round((z.b-z.a)*H))+'px'}
 
 function renderZones(){
  const mk=$('#mk');mk.innerHTML='';
@@ -1111,7 +1134,7 @@ function renderZones(){
 function dragZone(z,kind,e,el){
  e.preventDefault();
  const tgt=e.currentTarget;try{tgt.setPointerCapture(e.pointerId)}catch(x){}
- const H0=zoneH(),minF=MIN_ZONE_PX/H0,y0=e.clientY,a0=z.a,b0=z.b,s0=scroller.scrollTop;
+ const H0=zoneH(),minF=minZonePx()/H0,y0=e.clientY,a0=z.a,b0=z.b,s0=scroller.scrollTop;
  /* in section mode, dragging a shared boundary moves the neighbouring section's edge too */
  const zs=Z(),link=secOn();
  const prev=link&&kind==='top'?zs.find(p=>p!==z&&Math.abs(p.b-a0)<.003):null;
@@ -1151,7 +1174,7 @@ function dragZone(z,kind,e,el){
 $('#zadd').onclick=()=>{
  if(!cur){toast('Open a PDF first.');return}
  if(secOn()&&!secEditing){toast('Tap Edit to add sections.');return}
- const H=zoneH(),len=Math.min(.5,Math.max(MIN_ZONE_PX/H,scroller.clientHeight*0.4/H));
+ const H=zoneH(),len=Math.min(.5,Math.max(minZonePx()/H,scroller.clientHeight*0.4/H));
  const mid=(scroller.scrollTop+scroller.clientHeight*0.5)/H;
  let a=Math.max(0,Math.min(1-len,mid-len/2));
  const zs=Z(),sec=secOn();
