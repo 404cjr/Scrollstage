@@ -61,6 +61,10 @@ body.lib-open #lib{margin-left:0}
 .btn-sec:hover{background:color-mix(in srgb,var(--ink) 14%,transparent)}
 .sync-row{display:flex;gap:6px;margin-top:6px}
 .sync-row .btn-sec{margin-top:0;flex:1}
+.gsync{margin-top:12px;padding-top:10px;border-top:1px solid var(--line,rgba(128,128,128,.3))}
+.gtitle{font-size:12px;font-weight:700;opacity:.8;margin-bottom:6px}
+#gClient{width:100%;box-sizing:border-box;padding:9px 10px;border-radius:10px;font-size:12px;background:color-mix(in srgb,var(--ink) 6%,transparent);color:var(--ink);border:1px solid color-mix(in srgb,var(--ink) 18%,transparent)}
+#gStatus{font-size:11.5px;opacity:.75;margin:6px 0 2px;word-break:break-word}
 #empty-list{padding:18px 8px;color:var(--mute);font-size:14px;line-height:1.5}
 #scrim{display:none}
 
@@ -261,6 +265,13 @@ body.lib-open #scrim{display:block;position:absolute;inset:0;background:rgba(0,0
       <div class="sync-row">
         <button class="btn-sec" id="exportBtn">Export Setlist</button>
         <button class="btn-sec" id="importBtn">Import Setlist</button>
+      </div>
+      <div class="gsync">
+        <div class="gtitle">Google account sync</div>
+        <input type="text" id="gClient" placeholder="Google Client ID (…apps.googleusercontent.com)" autocomplete="off" spellcheck="false">
+        <div id="gStatus">Not signed in</div>
+        <button class="btn-sec" id="gSignIn">Sign in with Google</button>
+        <div class="sync-row"><button class="btn-sec" id="gSyncNow">Sync now</button><button class="btn-sec" id="gSignOut">Sign out</button></div>
       </div>
       <div id="note"></div>
     </div>
@@ -1206,6 +1217,188 @@ addEventListener('keydown',e=>{
  else if(e.key==='Home'){$('#top').click()}
 });
 
+/* ---------- Google sign-in + sync (Drive "app data" folder: private to this app, invisible in the user's Drive) ---------- */
+const gSync=(()=>{
+  const SCOPE='https://www.googleapis.com/auth/drive.appdata openid email';
+  const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){return null}};
+  let tokenClient=null,gTok=null,gExp=0,gEmail=LS('ss_gemail')||'',busy=false,dirty=false,timer=null;
+  const clientId=()=>(LS('ss_gclient')||'').trim();
+  const rec=()=>{try{return JSON.parse(LS('ss_gsync')||'{}')}catch(e){return{}}};   // {songId:{sig,mid,pid}}
+  const saveRec=r=>LS('ss_gsync',JSON.stringify(r));
+  const tombs=()=>{try{return JSON.parse(LS('ss_gtomb')||'[]')}catch(e){return[]}};
+  const sigOf=s=>JSON.stringify([s.name,s.folder||'All Songs',s.speed,s.bpm,s.zoom,s.notes||'',s.zones||[],s.secs||[],!!s.secOn]);
+  const ui={};
+  function setStatus(t){if(ui.st)ui.st.textContent=t}
+  function refreshUI(){
+    if(!ui.st)return;
+    const signed=!!LS('ss_gin');
+    ui.id.value=clientId();
+    ui.signin.style.display=signed?'none':'';
+    ui.now.style.display=ui.out.style.display=signed?'':'none';
+    if(!signed)setStatus(clientId()?'Not signed in':'Paste your Google Client ID, then sign in');
+    else setStatus('Signed in'+(gEmail?' as '+gEmail:''));
+  }
+  function loadGIS(){
+    return new Promise((res,rej)=>{
+      if(window.google&&google.accounts&&google.accounts.oauth2)return res();
+      const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;
+      s.onload=()=>res();s.onerror=()=>rej(new Error('Could not load Google sign-in (offline?)'));document.head.appendChild(s);
+    });
+  }
+  async function getToken(interactive){
+    if(gTok&&Date.now()<gExp-60000)return gTok;
+    if(!clientId())throw new Error('Add your Google Client ID first');
+    await loadGIS();
+    return new Promise((res,rej)=>{
+      tokenClient=google.accounts.oauth2.initTokenClient({
+        client_id:clientId(),scope:SCOPE,
+        callback:r=>{if(r.error)return rej(new Error(r.error_description||r.error));gTok=r.access_token;gExp=Date.now()+(+r.expires_in||3600)*1000;res(gTok)},
+        error_callback:e=>rej(new Error(e&&e.type||'popup_closed'))
+      });
+      tokenClient.requestAccessToken({prompt:interactive?(LS('ss_gin')?'':'consent'):'none',hint:gEmail||undefined});
+    });
+  }
+  async function api(path,opt={}){
+    const t=await getToken(false);
+    const r=await fetch(path,{...opt,headers:{...(opt.headers||{}),Authorization:'Bearer '+t}});
+    if(r.status===401){gTok=null;throw new Error('Session expired. Tap Sync now.')}
+    if(!r.ok)throw new Error('Google Drive error '+r.status);
+    return r;
+  }
+  async function listRemote(){
+    const out={};let page='';
+    do{
+      const r=await api('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&pageSize=1000&fields=nextPageToken,files(id,name,appProperties)'+(page?'&pageToken='+page:''));
+      const j=await r.json();(j.files||[]).forEach(f=>out[f.name]=f);page=j.nextPageToken||'';
+    }while(page);
+    return out;
+  }
+  async function upload(name,body,mime,existing,props){
+    const b='ssb'+Math.random().toString(36).slice(2);
+    const meta=existing?{appProperties:props||{}}:{name,parents:['appDataFolder'],appProperties:props||{}};
+    const blob=new Blob(['--'+b+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(meta)+'\r\n--'+b+'\r\nContent-Type: '+mime+'\r\n\r\n',body,'\r\n--'+b+'--'],{type:'multipart/related; boundary='+b});
+    const url=existing?'https://www.googleapis.com/upload/drive/v3/files/'+existing+'?uploadType=multipart&fields=id':'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id';
+    const r=await api(url,{method:existing?'PATCH':'POST',body:blob,headers:{'Content-Type':'multipart/related; boundary='+b}});
+    return (await r.json()).id;
+  }
+  const download=async id=>api('https://www.googleapis.com/drive/v3/files/'+id+'?alt=media');
+  const del=async id=>{try{await api('https://www.googleapis.com/drive/v3/files/'+id,{method:'DELETE'})}catch(e){}};
+
+  async function sync(interactive){
+    if(busy){dirty=true;return}
+    busy=true;
+    try{
+      setStatus('Syncing…');
+      await getToken(!!interactive);
+      if(!gEmail){try{const u=await (await api('https://www.googleapis.com/oauth2/v3/userinfo')).json();gEmail=u.email||'';LS('ss_gemail',gEmail)}catch(e){}}
+      const remote=await listRemote(),R=rec(),local=new Map(songs.map(s=>[s.id,s]));
+      let up=0,down=0,rem=0;
+      // 1) deletions made on this device
+      for(const id of tombs()){const m=remote['m_'+id+'.json'],p=remote['p_'+id+'.pdf'];if(m)await del(m.id);if(p)await del(p.id);delete R[id];delete remote['m_'+id+'.json'];delete remote['p_'+id+'.pdf']}
+      LS('ss_gtomb','[]');
+      // 2) songs removed on another device
+      for(const id of Object.keys(R)){
+        if(!remote['m_'+id+'.json']&&local.has(id)){
+          await store.del.__orig(id);songs=songs.filter(z=>z.id!==id);local.delete(id);delete R[id];rem++;
+          if(cur&&cur.id===id){cur=null}
+        }else if(!remote['m_'+id+'.json'])delete R[id];
+      }
+      // 3) per-song: upload / download
+      const remoteIds=Object.keys(remote).filter(n=>n.startsWith('m_')&&n.endsWith('.json')).map(n=>n.slice(2,-5));
+      for(const id of new Set([...local.keys(),...remoteIds])){
+        const s=local.get(id),mf=remote['m_'+id+'.json'],pf=remote['p_'+id+'.pdf'],r=R[id];
+        if(s&&!mf){ // new here → upload
+          let pid=pf&&pf.id;
+          if(s.blob&&!pid)pid=await upload('p_'+id+'.pdf',s.blob,'application/pdf',null,{});
+          const sig=sigOf(s);
+          const mid=await upload('m_'+id+'.json',JSON.stringify({id,name:s.name,folder:s.folder||'All Songs',speed:s.speed,bpm:s.bpm,zoom:s.zoom,notes:s.notes||'',zones:s.zones||[],secs:s.secs||[],secOn:!!s.secOn,added:s.added||Date.now()}),'application/json',null,{sig});
+          R[id]={sig,mid,pid};up++;continue;
+        }
+        if(!s&&mf){ // new on another device → download
+          const m=await (await download(mf.id)).json();
+          let blob=null;if(pf)blob=await (await download(pf.id)).blob();
+          const ns={id,name:m.name,folder:m.folder||'All Songs',speed:m.speed||defSpeed,bpm:m.bpm||bpm,zoom:m.zoom||1,pos:0,notes:m.notes||'',zones:m.zones||[],secs:m.secs||[],secOn:!!m.secOn,added:m.added||Date.now(),blob};
+          await store.del.__origPut(ns);songs.push(ns);
+          if(ns.folder&&!folders.includes(ns.folder))folders.push(ns.folder);
+          R[id]={sig:sigOf(ns),mid:mf.id,pid:pf&&pf.id};down++;continue;
+        }
+        if(s&&mf){
+          const lsig=sigOf(s),rsig=(mf.appProperties&&mf.appProperties.sig)||'',base=r&&r.sig;
+          const localChanged=lsig!==base,remoteChanged=rsig!==base&&rsig!==lsig;
+          if(!r||(!localChanged&&!remoteChanged)){ if(!r){R[id]={sig:lsig,mid:mf.id,pid:pf&&pf.id}} ; if(!r&&rsig!==lsig){ /* first link: push this device's version */ await upload('m_'+id+'.json',JSON.stringify(metaOf(s)),'application/json',mf.id,{sig:lsig});up++;} continue; }
+          if(localChanged){ // this device wins (it is the one you are syncing from)
+            await upload('m_'+id+'.json',JSON.stringify(metaOf(s)),'application/json',mf.id,{sig:lsig});
+            if(s.blob&&!pf){await upload('p_'+id+'.pdf',s.blob,'application/pdf',null,{})}
+            R[id]={sig:lsig,mid:mf.id,pid:pf&&pf.id};up++;
+          }else{ // only remote changed → take it
+            const m=await (await download(mf.id)).json();
+            Object.assign(s,{name:m.name,folder:m.folder||'All Songs',speed:m.speed||s.speed,bpm:m.bpm||s.bpm,zoom:m.zoom||s.zoom,notes:m.notes||'',zones:m.zones||[],secs:m.secs||[],secOn:!!m.secOn});
+            await store.del.__origPut(s);
+            if(s.folder&&!folders.includes(s.folder))folders.push(s.folder);
+            R[id]={sig:sigOf(s),mid:mf.id,pid:pf&&pf.id};down++;
+          }
+        }
+      }
+      // 4) folders (union)
+      try{
+        const ff=remote['folders.json'];let rf=[];
+        if(ff)rf=(await (await download(ff.id)).json()).folders||[];
+        const merged=[...new Set([...folders,...rf])];
+        folders.length=0;merged.forEach(f=>folders.push(f));
+        LS('ss_folders',JSON.stringify(folders));
+        if(JSON.stringify(rf)!==JSON.stringify(merged))await upload('folders.json',JSON.stringify({folders:merged}),'application/json',ff&&ff.id,{});
+      }catch(e){}
+      saveRec(R);
+      songs.sort((a,b)=>(a.added||0)-(b.added||0));
+      updateFolderSelect();renderList();
+      LS('ss_gin','1');refreshUI();
+      setStatus('Synced'+(gEmail?' · '+gEmail:'')+' · '+new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}));
+      if(up||down||rem)toast('Synced: '+up+' up, '+down+' down'+(rem?', '+rem+' removed':''));
+      else if(interactive)toast('Everything is up to date');
+    }catch(e){
+      const m=String(e&&e.message||e);
+      if(/popup|interaction|consent|login|access_denied|immediate/i.test(m)&&!interactive)setStatus('Signed in · tap Sync now to reconnect');
+      else{setStatus('Sync failed: '+m);if(interactive)toast('Sync failed: '+m)}
+    }finally{busy=false;if(dirty){dirty=false;sched()}}
+  }
+  const metaOf=s=>({id:s.id,name:s.name,folder:s.folder||'All Songs',speed:s.speed,bpm:s.bpm,zoom:s.zoom,notes:s.notes||'',zones:s.zones||[],secs:s.secs||[],secOn:!!s.secOn,added:s.added||Date.now()});
+  function needsSync(){
+    const R=rec();
+    if(tombs().length)return true;
+    for(const s of songs){const r=R[s.id];if(!r||r.sig!==sigOf(s))return true}
+    return false;
+  }
+  function sched(){
+    if(!LS('ss_gin')||!gTok)return;
+    clearTimeout(timer);timer=setTimeout(()=>{if(needsSync())sync(false)},15000);
+  }
+  function signIn(){
+    if(!clientId()){toast('Paste your Google Client ID first');return}
+    sync(true);
+  }
+  function signOut(){
+    try{if(gTok&&window.google)google.accounts.oauth2.revoke(gTok,()=>{})}catch(e){}
+    gTok=null;gExp=0;gEmail='';['ss_gin','ss_gemail','ss_gsync','ss_gtomb'].forEach(k=>LS(k,null));
+    refreshUI();toast('Signed out. Your songs stay on this device.');
+  }
+  function addTomb(id){if(!LS('ss_gin'))return;const t=tombs();if(!t.includes(id))t.push(id);LS('ss_gtomb',JSON.stringify(t));const R=rec();delete R[id];saveRec(R);sched()}
+  function init(){
+    ui.id=$('#gClient');ui.signin=$('#gSignIn');ui.now=$('#gSyncNow');ui.out=$('#gSignOut');ui.st=$('#gStatus');
+    ui.id.onchange=()=>{LS('ss_gclient',ui.id.value.trim());refreshUI()};
+    ui.signin.onclick=()=>{LS('ss_gclient',ui.id.value.trim());signIn()};
+    ui.now.onclick=()=>sync(true);ui.out.onclick=signOut;
+    refreshUI();
+    if(LS('ss_gin')&&clientId())sync(false);   // quiet sync on app open
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&gTok&&needsSync())sync(false)});
+  }
+  return{init,sched,addTomb};
+})();
+// hook the song store so changes sync automatically and deletes propagate
+{const op=store.put.bind(store),od=store.del.bind(store);
+ store.put=async o=>{await op(o);gSync.sched()};
+ store.del=async id=>{await od(id);gSync.addTomb(id)};
+ store.del.__orig=od;store.del.__origPut=op;}
+
 /* ---------- boot ---------- */
 (async()=>{
  syncUnits();setSpeed(mode==='bpm'?bpm:speed,true);
@@ -1215,6 +1408,7 @@ addEventListener('keydown',e=>{
  renderList();
  if(narrow()&&songs.length)setLib(false);
  lw=layoutW();
+ gSync.init();
 })();
 })();
 </script>
