@@ -1396,7 +1396,11 @@ const gSync=(()=>{
     ui.now.onclick=()=>sync(true);ui.out.onclick=signOut;
     refreshUI();
     if(LS('ss_gin')&&clientId())sync(false);   // quiet sync on app open
-    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&gTok&&needsSync())sync(false)});
+    document.addEventListener('visibilitychange',()=>{
+      if(!LS('ss_gin')||!clientId())return;
+      if(document.visibilityState==='hidden'){if(gTok&&needsSync())sync(false)}
+      else if(!playing)sync(false);   // coming back to the app: pull changes from your other devices
+    });
   }
   return{init,sched,addTomb};
 })();
