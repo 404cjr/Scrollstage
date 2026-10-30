@@ -1226,7 +1226,9 @@ const gSync=(()=>{
   const rec=()=>{try{return JSON.parse(LS('ss_gsync')||'{}')}catch(e){return{}}};   // {songId:{sig,mid,pid}}
   const saveRec=r=>LS('ss_gsync',JSON.stringify(r));
   const tombs=()=>{try{return JSON.parse(LS('ss_gtomb')||'[]')}catch(e){return[]}};
-  const sigOf=s=>JSON.stringify([s.name,s.folder||'All Songs',s.speed,s.bpm,s.zoom,s.notes||'',s.zones||[],s.secs||[],!!s.secOn]);
+  /* short fingerprint of the synced fields (Drive limits a property to 124 bytes) */
+  const hash53=str=>{let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return (4294967296*(2097151&h2)+(h1>>>0)).toString(36)};
+  const sigOf=s=>hash53(JSON.stringify([s.name,s.folder||'All Songs',s.speed,s.bpm,s.zoom,s.notes||'',s.zones||[],s.secs||[],!!s.secOn]));
   const ui={};
   function setStatus(t){if(ui.st)ui.st.textContent=t}
   function refreshUI(){
