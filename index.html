@@ -55,6 +55,14 @@ body.lib-open #lib{margin-left:0}
 .song .arr-btn:hover,.song .x:hover{background:color-mix(in srgb,var(--ink) 10%,transparent);color:var(--ink)}
 
 #libfoot{padding:12px;border-top:1px solid var(--line)}
+#settings{margin-top:8px}
+#settings summary{list-style:none;cursor:pointer;padding:10px 6px;font-size:13px;font-weight:600;color:var(--mute);display:flex;align-items:center;justify-content:space-between;user-select:none}
+#settings summary::-webkit-details-marker{display:none}
+#settings summary::after{content:'▾';transition:transform .2s}
+#settings[open] summary::after{transform:rotate(180deg)}
+#settings .setbody{max-height:52vh;overflow-y:auto;padding:2px 2px 6px;-webkit-overflow-scrolling:touch}
+#settings .setbody>*{margin-bottom:2px}
+#settings .gsync{margin-top:10px}
 #note{font-size:12px;color:var(--mute);margin:8px 4px 0}
 .add{width:100%;padding:13px;border-radius:12px;font-weight:700;color:var(--on);background:var(--a2)}
 .btn-sec{width:100%;padding:10px;border-radius:10px;font-weight:600;font-size:13px;margin-top:6px;background:color-mix(in srgb,var(--ink) 8%,transparent);color:var(--ink);border:1px solid var(--line);text-align:center}
@@ -62,6 +70,8 @@ body.lib-open #lib{margin-left:0}
 .sync-row{display:flex;gap:6px;margin-top:6px}
 .sync-row .btn-sec{margin-top:0;flex:1}
 .gsync{margin-top:12px;padding-top:10px;border-top:1px solid var(--line,rgba(128,128,128,.3))}
+#gSignIn{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1f1f1f;border:1px solid #dadce0;font-weight:600}
+#gSignIn svg{flex:none}
 .gtitle{font-size:12px;font-weight:700;opacity:.8;margin-bottom:6px}
 #gClient{width:100%;box-sizing:border-box;padding:9px 10px;border-radius:10px;font-size:12px;background:color-mix(in srgb,var(--ink) 6%,transparent);color:var(--ink);border:1px solid color-mix(in srgb,var(--ink) 18%,transparent)}
 #gStatus{font-size:11.5px;opacity:.75;margin:6px 0 2px;word-break:break-word}
@@ -86,6 +96,7 @@ body.lib-open #lib{margin-left:0}
 /* Speed brackets */
 #mk{position:absolute;left:0;top:0;width:100%;height:0;z-index:3;pointer-events:none}
 .zb{position:absolute;right:4px;width:30px;pointer-events:none}
+.zb.sel{z-index:5000!important}
 .zbar{position:absolute;right:0;top:0;bottom:0;width:22px;border:4px solid var(--a2);border-left:0;border-radius:0 12px 12px 0;background:color-mix(in srgb,var(--a2) 14%,transparent);pointer-events:auto;touch-action:none;cursor:grab}
 .zb.sel .zbar{background:color-mix(in srgb,var(--a2) 30%,transparent);box-shadow:0 0 14px var(--glow)}
 .zchip{position:absolute;top:50%;right:100%;transform:translate(-4px,-50%);background:var(--a2);color:var(--on);font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
@@ -230,8 +241,7 @@ body.lib-open #scrim{display:block;position:absolute;inset:0;background:rgba(0,0
       </svg>
       <h1>Scrollstage</h1>
     </div>
-    <div class="sub">Songs you add are saved on this device.</div>
-
+    
     <!-- Show Folders Bar -->
     <div id="folder-bar">
       <select id="folder-select" aria-label="Select Show Folder"></select>
@@ -241,11 +251,14 @@ body.lib-open #scrim{display:block;position:absolute;inset:0;background:rgba(0,0
 
     <div id="list"></div>
     <div id="libfoot">
+      <button class="add" id="addBtn">Add PDFs</button>
+      <details id="settings">
+        <summary>Settings</summary>
+        <div class="setbody">
       <div class="set">
         <div class="lbl">Speed unit</div>
         <div class="seg" id="seg"><button data-u="lvl">Level</button><button data-u="bpm">BPM</button></div>
         <div class="bps" id="bpsrow" title="How many beats go by while the sheet scrolls one page"><span>Beats per page</span><div><button id="bm" aria-label="Fewer beats per page">−</button><b id="bpsv">32</b><button id="bp" aria-label="More beats per page">+</button></div></div>
-        <div class="hint">Speed is measured against the sheet, not the screen, so it plays the same on iPhone, iPad, Android, Windows and Mac.</div>
       </div>
       <div class="pb-amt" title="Makes the sheet bigger on this device only. Scroll speed stays the same relative to the music.">
         <span>Sheet size</span><input type="range" id="devScale" min="1" max="3" step="0.1" aria-label="Sheet size on this device"><b id="devScaleV">1.6x</b>
@@ -261,17 +274,19 @@ body.lib-open #scrim{display:block;position:absolute;inset:0;background:rgba(0,0
       <div class="pb-amt" id="pbAmtRow" title="How much faster the scroll runs through the gap between pages">
         <span>Boost</span><input type="range" id="pbAmt" min="1.5" max="4" step="0.5" aria-label="Page change speed boost"><b id="pbAmtV">2.5x</b>
       </div>
-      <button class="add" id="addBtn">Add PDFs</button>
       <div class="sync-row">
         <button class="btn-sec" id="exportBtn">Export Setlist</button>
         <button class="btn-sec" id="importBtn">Import Setlist</button>
       </div>
+      <button class="btn-sec" id="shareBtn" title="Send the songs in the current folder to a bandmate (AirDrop, text, email…)">Share this folder…</button>
       <div class="gsync">
         <div class="gtitle">Google account sync</div>
         <div id="gStatus">Not signed in</div>
-        <button class="btn-sec" id="gSignIn">Sign in with Google</button>
+        <button class="btn-sec" id="gSignIn"><svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span>Sign in with Google</span></button>
         <div class="sync-row"><button class="btn-sec" id="gSyncNow">Sync now</button><button class="btn-sec" id="gSignOut">Sign out</button></div>
       </div>
+        </div>
+      </details>
       <div id="note"></div>
     </div>
   </aside>
@@ -489,6 +504,10 @@ const layoutW=()=>Math.max(240,(($('#app').clientWidth||innerWidth)-68)*devScale
    on every device and at every sheet size. Same musical speed everywhere. */
 const SC=()=>(pw||layoutW())/REF_W;
 const pageH=()=>(pw||layoutW())*pgRatio;
+/* The playhead: speeds and sections are read from a line just below the top of the screen. Its distance from the top is a share of
+   the sheet width (not of the screen height), so a section starts at the same musical moment on every device and screen shape. */
+const PLAYHEAD=0.06;
+const playY=()=>scroller.scrollTop+PLAYHEAD*(pw||layoutW());
 const spd=()=>mode==='bpm'?bpm/60/bps*pageH():4*Math.pow(1.04,speed)*SC();
 
 /* ---------- Export & Import (.sstg) ---------- */
@@ -547,6 +566,27 @@ $('#exportBtn').onclick = async () => {
   } catch (e) {
     toast('Failed to export setlist.');
   }
+};
+
+/* Share the songs in the current folder as a .sstg file through the phone's share sheet */
+$('#shareBtn').onclick = async () => {
+  const list = getVisibleSongs();
+  if (!list.length) { toast('No songs in this folder to share.'); return; }
+  toast('Preparing…');
+  try {
+    const data = [];
+    for (const s of list) {
+      data.push({id:s.id,name:s.name,folder:s.folder||'All Songs',speed:s.speed,bpm:s.bpm,zoom:s.zoom,pos:0,notes:s.notes,zones:s.zones,secs:s.secs,secOn:s.secOn,added:s.added,blobData:s.blob?await blobToBase64(s.blob):null});
+    }
+    const base = ((activeFolder && activeFolder !== 'All Songs') ? activeFolder : 'Setlist').replace(/[^\w\- ]+/g,'').trim() || 'Setlist';
+    const file = new File([JSON.stringify(data)], base + '.sstg', {type:'application/json'});
+    if (navigator.canShare && navigator.canShare({files:[file]})) {
+      try { await navigator.share({files:[file], title:base, text:'Scrollstage setlist: ' + list.length + ' song' + (list.length>1?'s':'') + '. Open Scrollstage → Settings → Import Setlist.'}); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; }
+    }
+    const a = document.createElement('a'); a.href = URL.createObjectURL(file); a.download = base + '.sstg'; a.click();
+    toast('Saved ' + base + '.sstg. Send it to your bandmate.');
+  } catch (e) { toast('Could not prepare the share file.'); }
 };
 
 $('#importBtn').onclick = () => $('#importFile').click();
@@ -713,7 +753,7 @@ function pbMult(){
  if(!pbOn||pbAmt<=1)return 1;
  const pg=pagesEl.children;if(pg.length<2)return 1;
  const zone=pg[0].offsetHeight*0.06;   // reach of the boost on each side of a page edge
- const y=scroller.scrollTop+scroller.clientHeight*0.5; // reading line, middle of the screen
+ const y=playY(); // the playhead
  let m=1;
  for(let i=1;i<pg.length;i++){
   const d=Math.abs(y-pg[i].offsetTop)/zone;
@@ -726,7 +766,7 @@ function pbMult(){
 let secCur=1;
 function secTarget(){
  if(!cur||!cur.zones||!cur.zones.length)return 1;
- const f=(scroller.scrollTop+scroller.clientHeight*0.5)/(scroller.scrollHeight||1);
+ const f=playY()/(scroller.scrollHeight||1);
  let m=1;for(const z of cur.zones){if(f>=z.a&&f<=z.b)m=z.m}
  return m;
 }
@@ -781,7 +821,12 @@ async function setPlaying(p){
 async function startPlayingEngine() {
  playing=true;$('#play').innerHTML=IC.pause;$('#play').classList.add('on');
  cancelAnimationFrame(raf);
- if(selZone){selZone=null;renderZones()}{const ft=firstSecTop();if(ft>=0&&scroller.scrollTop+scroller.clientHeight*0.5<ft+12)scroller.scrollTop=ft} /* start from the first section */
+ if(selZone){selZone=null;renderZones()}{const ft=firstSecTop();if(ft>=0&&scroller.scrollTop<ft)scroller.scrollTop=ft} /* start from the first section */
+ startForce=null;
+ if(secOn()&&cur&&cur.secs&&cur.secs.length){
+  const H=scroller.scrollHeight||1,t=(scroller.scrollTop+8)/H,vis=(scroller.scrollTop+scroller.clientHeight)/H;
+  startForce=cur.secs.find(z=>t>=z.a-0.004&&t<=z.b)||cur.secs.filter(z=>z.a>t&&z.a<vis).sort((a,b)=>a.a-b.a)[0]||null;
+ }
  secCur=secTarget();secPxCur=secOn()?secTargetPx():0;liveSec=null;document.body.classList.add('playing');pos=scroller.scrollTop;expect=pos;last=performance.now();raf=requestAnimationFrame(tick);
  try{if(navigator.wakeLock)lock=await navigator.wakeLock.request('screen')}catch(e){}
 }
@@ -874,7 +919,7 @@ nt.addEventListener('input',()=>{if(!cur)return;cur.notes=nt.value.slice(0,5000)
 
 /* ---------- speed brackets + section mode ---------- */
 const MIN_ZONE_PX=70;
-const minZonePx=()=>secOn()?24:MIN_ZONE_PX; /* section brackets can be short, so neighbours don't overlap */
+const minZonePx=()=>secOn()?32:MIN_ZONE_PX; /* section brackets can be short, so neighbours don't overlap */
 /* where the first section starts (px), or -1 */
 function firstSecTop(){if(!secOn()||!cur||!cur.secs||!cur.secs.length)return -1;return Math.max(0,Math.round(Math.min(...cur.secs.map(z=>z.a))*zoneH())-12)}
 let selZone=null,zT,barZone=null,secPxCur=0,liveSec=null,secEditing=false;
@@ -900,9 +945,18 @@ const secLabel=z=>(z.name||'Section')+' · '+spShown(z)+(mode==='bpm'?' BPM':'')
 const baseName=z=>(z.name||'Section').replace(/\s*\d+\s*$/,'').trim()||'Section';
 
 /* playback: which section is under the reading line, and how fast to go */
+/* When Play is pressed, the section at the top of the screen is the one that plays first (even if it is short and the
+   playhead is already past it). It holds until the top of the screen scrolls past its end, then the playhead takes over. */
+let startForce=null;
 function secFind(){
  if(!cur||!cur.secs||!cur.secs.length)return null;
- const f=(scroller.scrollTop+scroller.clientHeight*0.5)/(scroller.scrollHeight||1);
+ const H=scroller.scrollHeight||1;
+ if(startForce){
+  const t=(scroller.scrollTop+8)/H;
+  if(cur.secs.includes(startForce)&&t>=startForce.a-0.01&&t<=startForce.b)return startForce;
+  startForce=null;
+ }
+ const f=playY()/H;
  let r=null;for(const z of cur.secs){if(f>=z.a&&f<=z.b)r=z}
  return r;
 }
@@ -1104,7 +1158,7 @@ $('#secAuto').onclick=detectSections;
 /* ---------- bracket drawing + dragging ---------- */
 function schedZones(){clearTimeout(zT);zT=setTimeout(renderZones,250)}
 function commitZones(){schedSave();renderZones()}
-function placeZone(el,z){const H=zoneH();el.style.top=Math.round(z.a*H)+'px';el.style.height=Math.max(minZonePx(),Math.round((z.b-z.a)*H))+'px'}
+function placeZone(el,z){const H=zoneH();el.style.top=Math.round(z.a*H)+'px';const h=Math.max(minZonePx(),Math.round((z.b-z.a)*H));el.style.height=h+'px';el.style.zIndex=Math.max(1,2000-h)}   // shorter brackets sit on top so a small section can never be buried under its neighbour
 
 function renderZones(){
  const mk=$('#mk');mk.innerHTML='';
