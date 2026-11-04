@@ -72,6 +72,21 @@ body.lib-open #lib{margin-left:0}
 .gsync{margin-top:12px;padding-top:10px;border-top:1px solid var(--line,rgba(128,128,128,.3))}
 #gSignIn{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1f1f1f;border:1px solid #dadce0;font-weight:600}
 #gSignIn svg{flex:none}
+#cropTog[hidden]{display:none}
+#cropDlg{position:fixed;inset:0;z-index:70;background:#15171b;display:flex;flex-direction:column;color:#eee}
+#cropDlg[hidden]{display:none}
+.cp-bar{padding:10px 12px;background:#1d2026;border-bottom:1px solid #2c3038;display:flex;flex-direction:column;gap:8px}
+.cp-hint{font-size:12.5px;line-height:1.4;color:#c9ccd3}
+.cp-btns{display:flex;gap:8px;flex-wrap:wrap}.cp-btns .btn-sec{flex:1;margin:0;min-width:96px;color:#eee}.cp-btns .add{flex:1;padding:11px;min-width:96px}
+.cp-btns .btn-sec.on{background:#1f7aff;color:#fff}
+#cropPages{flex:1;overflow:auto;padding:6px 0 40px;-webkit-overflow-scrolling:touch}
+.cp-page{position:relative;margin:10px auto;background:#fff;box-shadow:0 2px 14px rgba(0,0,0,.5);max-width:100%}
+.cp-ov{position:absolute;inset:0}
+#cropDlg.drawing .cp-ov{touch-action:none;cursor:crosshair}
+.cp-box{position:absolute;box-sizing:border-box;border:2px solid #1f7aff;background:rgba(31,122,255,.18);pointer-events:none}
+.cp-box.tmp{background:rgba(31,122,255,.1);border-style:dashed}
+.cp-x{pointer-events:auto;position:absolute;top:2px;right:2px;width:30px;height:30px;border-radius:50%;background:#1f7aff;color:#fff;font-size:16px;line-height:30px;text-align:center}
+.cp-n{position:absolute;left:4px;top:2px;background:#1f7aff;color:#fff;font-size:11px;padding:1px 6px;border-radius:9px}
 .gtitle{font-size:12px;font-weight:700;opacity:.8;margin-bottom:6px}
 #gClient{width:100%;box-sizing:border-box;padding:9px 10px;border-radius:10px;font-size:12px;background:color-mix(in srgb,var(--ink) 6%,transparent);color:var(--ink);border:1px solid color-mix(in srgb,var(--ink) 18%,transparent)}
 #gStatus{font-size:11.5px;opacity:.75;margin:6px 0 2px;word-break:break-word}
@@ -278,6 +293,7 @@ body.lib-open #scrim{display:block;position:absolute;inset:0;background:rgba(0,0
         <button class="btn-sec" id="exportBtn">Export Setlist</button>
         <button class="btn-sec" id="importBtn">Import Setlist</button>
       </div>
+      <button class="btn-sec" id="cropBtn" title="Pick just the parts of each page you want to see (like the chord line) and scroll those">Crop view for open song…</button>
       <button class="btn-sec" id="shareBtn" title="Send the songs in the current folder to a bandmate (AirDrop, text, email…)">Share this folder…</button>
       <div class="gsync">
         <div class="gtitle">Google account sync</div>
@@ -355,11 +371,24 @@ body.lib-open #scrim{display:block;position:absolute;inset:0;background:rgba(0,0
     <button class="tool" id="zout" aria-label="Zoom out">−</button>
     <button class="tool" id="top" aria-label="Back to top"></button>
     <button class="tool" id="notes" aria-label="Notes"></button>
+    <button class="tool" id="cropTog" aria-label="Switch between full sheet and cropped view" title="Cropped view / full sheet" hidden></button>
     <button class="tool" id="secBtn" aria-label="Section mode" title="Section mode: each song section gets its own speed"></button>
     <button class="tool" id="zadd" aria-label="Add speed bracket" title="Add speed bracket"></button>
     <button class="tool" id="gigMode" aria-label="Show mode" title="Show mode: dark, library closed, next-song bar"></button>
     <button class="tool" id="fold" aria-label="Hide controls"></button>
   </nav>
+</div>
+<div id="cropDlg" hidden>
+  <div class="cp-bar">
+    <div class="cp-hint">Turn on <b>Draw boxes</b>, then drag a box around the part of each page you want, like the chord line. Tap ✕ on a box to remove it. Turn drawing off to scroll.</div>
+    <div class="cp-btns">
+      <button class="btn-sec" id="cropDraw">Draw boxes: off</button>
+      <button class="btn-sec" id="cropClear">Clear all</button>
+      <button class="btn-sec" id="cropCancel">Cancel</button>
+      <button class="add" id="cropDone">Done</button>
+    </div>
+  </div>
+  <div id="cropPages"></div>
 </div>
 <input type="file" id="file" accept="application/pdf,.pdf" multiple hidden>
 <input type="file" id="importFile" accept=".sstg,.scrollstage,application/json" hidden>
@@ -553,6 +582,7 @@ $('#exportBtn').onclick = async () => {
         zones: s.zones,
         secs: s.secs,
         secOn: s.secOn,
+        crops: s.crops, crop: s.crop, alt: s.alt,
         added: s.added,
         blobData: b64
       });
@@ -576,7 +606,7 @@ $('#shareBtn').onclick = async () => {
   try {
     const data = [];
     for (const s of list) {
-      data.push({id:s.id,name:s.name,folder:s.folder||'All Songs',speed:s.speed,bpm:s.bpm,zoom:s.zoom,pos:0,notes:s.notes,zones:s.zones,secs:s.secs,secOn:s.secOn,added:s.added,blobData:s.blob?await blobToBase64(s.blob):null});
+      data.push({id:s.id,name:s.name,folder:s.folder||'All Songs',speed:s.speed,bpm:s.bpm,zoom:s.zoom,pos:0,notes:s.notes,zones:s.zones,secs:s.secs,secOn:s.secOn,crops:s.crops,crop:s.crop,alt:s.alt,added:s.added,blobData:s.blob?await blobToBase64(s.blob):null});
     }
     const base = ((activeFolder && activeFolder !== 'All Songs') ? activeFolder : 'Setlist').replace(/[^\w\- ]+/g,'').trim() || 'Setlist';
     const file = new File([JSON.stringify(data)], base + '.sstg', {type:'application/json'});
@@ -613,6 +643,7 @@ $('#importFile').onchange = async (e) => {
           zones: Array.isArray(item.zones) ? item.zones : [],
           secs: Array.isArray(item.secs) ? item.secs : [],
           secOn: !!item.secOn,
+          crops: Array.isArray(item.crops) ? item.crops : [], crop: !!item.crop, alt: item.alt || null,
           added: item.added || Date.now(),
           blob: item.blobData ? dataURItoBlob(item.blobData) : null
         };
@@ -723,7 +754,14 @@ async function build(restore,my){
  if(my!==token)return;
  pw=Math.round(layoutW()*zoom);const ratio=v1.height/v1.width;pgRatio=ratio;
  pagesEl.style.width=pw+'px';
- for(let i=1;i<=pdf.numPages;i++){const d=document.createElement('div');d.className='page';d.dataset.n=i;d.style.height=Math.round(pw*ratio)+'px';pagesEl.appendChild(d)}
+ const strips=(cur&&cur.crop&&cur.crops&&cur.crops.length)?cur.crops.filter(c=>c.n>=1&&c.n<=pdf.numPages):null;
+ if(strips&&strips.length){
+  // cropped view: each box becomes its own strip, scaled to the full width of the sheet
+  strips.forEach(c=>{const d=document.createElement('div');d.className='page';d.dataset.n=c.n;d.dataset.s=cur.crops.indexOf(c);d.style.height=Math.round(pw*((c.y1-c.y0)*v1.height)/((c.x1-c.x0)*v1.width))+'px';pagesEl.appendChild(d)});
+  pgRatio=(pagesEl.firstChild.offsetHeight||Math.round(pw*ratio))/pw;
+ }else{
+  for(let i=1;i<=pdf.numPages;i++){const d=document.createElement('div');d.className='page';d.dataset.n=i;d.style.height=Math.round(pw*ratio)+'px';pagesEl.appendChild(d)}
+ }
  obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)renderPage(e.target,my)}),{root:scroller,rootMargin:'150% 0px'});
  [...pagesEl.children].forEach(c=>obs.observe(c));
  scroller.scrollTop=typeof restore==='number'?restore:Math.max(0,firstSecTop());pos=scroller.scrollTop;expect=pos;
@@ -734,7 +772,18 @@ async function renderPage(el,my){
  if(el._d)return;el._d=1;
  try{
   const pg=await pdf.getPage(+el.dataset.n);if(my!==token)return;
-  const b=pg.getViewport({scale:1}),css=pw/b.width;
+  const b=pg.getViewport({scale:1});
+  if(el.dataset.s!==undefined&&cur&&cur.crops&&cur.crops[+el.dataset.s]){
+   const st=cur.crops[+el.dataset.s],sw=(st.x1-st.x0)*b.width,sh=(st.y1-st.y0)*b.height,cs=pw/sw;
+   let k=cs*Math.min(devicePixelRatio||1,2);const pxs=sw*sh*k*k;if(pxs>14e6)k*=Math.sqrt(14e6/pxs);
+   const c=document.createElement('canvas');c.width=Math.max(1,Math.floor(sw*k));c.height=Math.max(1,Math.floor(sh*k));
+   c.style.width=pw+'px';c.style.height=Math.round(sh*cs)+'px';
+   el.style.height=c.style.height;schedZones();
+   await pg.render({canvasContext:c.getContext('2d'),viewport:pg.getViewport({scale:k}),transform:[1,0,0,1,-st.x0*b.width*k,-st.y0*b.height*k]}).promise;
+   if(my===token)el.appendChild(c);
+   return;
+  }
+  const css=pw/b.width;
   let sc=css*Math.min(devicePixelRatio||1,2);const px=b.width*b.height*sc*sc;if(px>14e6)sc*=Math.sqrt(14e6/px);
   const vp=pg.getViewport({scale:sc});
   const c=document.createElement('canvas');c.width=Math.floor(vp.width);c.height=Math.floor(vp.height);
@@ -979,6 +1028,7 @@ function syncSec(){
  document.body.classList.toggle('sec-on',on);$('#secBtn').classList.toggle('on',on);
  secEditing=false;document.body.classList.remove('sec-edit');   // a song always opens locked
  document.querySelectorAll('#secMode button').forEach(b=>b.classList.toggle('on',b.dataset.m==='view'));
+ syncCropUI();
 }
 /* View locks everything so nothing moves by accident; Edit unlocks the steppers, sliders and handles. */
 function setSecEdit(v,quiet){
@@ -1270,6 +1320,104 @@ addEventListener('keydown',e=>{
  else if(e.key==='Home'){$('#top').click()}
 });
 
+/* ---------- crop view: show only the parts of each page you pick (for example just the chord line) ---------- */
+/* Speed brackets and sections belong to a view: the full sheet keeps its own, the cropped view keeps its own. */
+function syncCropUI(){
+  const b=$('#cropTog');if(!b)return;
+  const has=!!(cur&&cur.crops&&cur.crops.length);
+  b.hidden=!has;b.classList.toggle('on',!!(cur&&cur.crop));
+}
+function swapView(){
+  const a=cur.alt||{zones:[],secs:[],secOn:false};
+  cur.alt={zones:cur.zones||[],secs:cur.secs||[],secOn:!!cur.secOn};
+  cur.zones=a.zones||[];cur.secs=a.secs||[];cur.secOn=!!a.secOn;
+}
+async function setCropView(on){
+  if(!cur||!pdf)return;
+  on=!!on&&!!(cur.crops&&cur.crops.length);
+  if(on===!!cur.crop)return;
+  setPlaying(false);
+  swapView();cur.crop=on;selZone=null;store.put(cur);
+  syncSec();
+  const my=++token;await build(0,my);
+  toast(on?'Cropped view. Tap the crop button to go back to the full sheet.':'Full sheet.');
+}
+$('#cropTog').innerHTML='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14M2 6h14a2 2 0 0 1 2 2v14"/></svg>';
+$('#cropTog').onclick=()=>setCropView(!(cur&&cur.crop));
+
+let cropDraft=[],cropDrawOn=false,cropRun=0;
+function cropSorted(){return cropDraft.slice().sort((a,b)=>a.n-b.n||a.y0-b.y0)}
+function drawCropBoxes(n){
+  const wrap=document.querySelector('.cp-page[data-n="'+n+'"]');if(!wrap)return;
+  const ov=wrap.querySelector('.cp-ov');ov.querySelectorAll('.cp-box:not(.tmp)').forEach(e=>e.remove());
+  const order=cropSorted();
+  cropDraft.filter(c=>c.n===n).forEach(c=>{
+    const d=document.createElement('div');d.className='cp-box';
+    d.style.cssText='left:'+c.x0*100+'%;top:'+c.y0*100+'%;width:'+(c.x1-c.x0)*100+'%;height:'+(c.y1-c.y0)*100+'%';
+    const lab=document.createElement('span');lab.className='cp-n';lab.textContent=order.indexOf(c)+1;
+    const x=document.createElement('button');x.className='cp-x';x.type='button';x.textContent='✕';x.setAttribute('aria-label','Remove box');
+    x.onclick=e=>{e.stopPropagation();cropDraft.splice(cropDraft.indexOf(c),1);document.querySelectorAll('.cp-page').forEach(w=>drawCropBoxes(+w.dataset.n))};
+    d.append(lab,x);ov.appendChild(d);
+  });
+}
+function attachCropDraw(ov,n){
+  let drag=null;
+  ov.addEventListener('pointerdown',e=>{
+    if(!cropDrawOn||e.target!==ov)return;
+    ov.setPointerCapture(e.pointerId);
+    const r=ov.getBoundingClientRect(),tmp=document.createElement('div');tmp.className='cp-box tmp';ov.appendChild(tmp);
+    drag={r,tmp,sx:(e.clientX-r.left)/r.width,sy:(e.clientY-r.top)/r.height};e.preventDefault();
+  });
+  ov.addEventListener('pointermove',e=>{
+    if(!drag)return;
+    const cx=Math.max(0,Math.min(1,(e.clientX-drag.r.left)/drag.r.width)),cy=Math.max(0,Math.min(1,(e.clientY-drag.r.top)/drag.r.height));
+    drag.x0=Math.min(drag.sx,cx);drag.x1=Math.max(drag.sx,cx);drag.y0=Math.min(drag.sy,cy);drag.y1=Math.max(drag.sy,cy);
+    drag.tmp.style.cssText='left:'+drag.x0*100+'%;top:'+drag.y0*100+'%;width:'+(drag.x1-drag.x0)*100+'%;height:'+(drag.y1-drag.y0)*100+'%';
+  });
+  const end=()=>{
+    if(!drag)return;const d=drag;drag=null;d.tmp.remove();
+    if(d.x1!==undefined&&d.x1-d.x0>=0.2&&d.y1-d.y0>=0.015)cropDraft.push({n,x0:d.x0,x1:d.x1,y0:d.y0,y1:d.y1});
+    drawCropBoxes(n);
+  };
+  ov.addEventListener('pointerup',end);ov.addEventListener('pointercancel',end);
+}
+function setCropDraw(v){cropDrawOn=v;$('#cropDlg').classList.toggle('drawing',v);const b=$('#cropDraw');b.classList.toggle('on',v);b.textContent='Draw boxes: '+(v?'on':'off')}
+async function openCropEditor(){
+  if(!cur||!pdf){toast('Open a song first.');return}
+  setPlaying(false);
+  cropDraft=((cur.crops)||[]).map(c=>({...c}));
+  const host=$('#cropPages');host.innerHTML='';setCropDraw(false);
+  $('#cropDlg').hidden=false;setLib(false);
+  const run=++cropRun,W=Math.min(innerWidth-24,860),dpr=Math.min(devicePixelRatio||1,2);
+  for(let n=1;n<=pdf.numPages;n++){
+    if(run!==cropRun)return;
+    const pg=await pdf.getPage(n),b=pg.getViewport({scale:1}),css=W/b.width,vp=pg.getViewport({scale:css*dpr});
+    const wrap=document.createElement('div');wrap.className='cp-page';wrap.dataset.n=n;wrap.style.width=W+'px';wrap.style.height=Math.round(b.height*css)+'px';
+    const c=document.createElement('canvas');c.width=Math.floor(vp.width);c.height=Math.floor(vp.height);c.style.cssText='width:100%;height:100%;display:block';
+    const ov=document.createElement('div');ov.className='cp-ov';
+    wrap.append(c,ov);host.appendChild(wrap);attachCropDraw(ov,n);
+    await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+    drawCropBoxes(n);
+  }
+}
+$('#cropBtn').onclick=openCropEditor;
+$('#cropDraw').onclick=()=>setCropDraw(!cropDrawOn);
+$('#cropClear').onclick=()=>{cropDraft=[];document.querySelectorAll('.cp-page').forEach(w=>drawCropBoxes(+w.dataset.n))};
+$('#cropCancel').onclick=()=>{cropRun++;$('#cropDlg').hidden=true};
+$('#cropDone').onclick=async()=>{
+  cropRun++;$('#cropDlg').hidden=true;
+  const list=cropSorted().map(c=>({n:c.n,x0:c.x0,x1:c.x1,y0:c.y0,y1:c.y1}));
+  if(!cur)return;
+  if(!list.length){
+    if(cur.crop)await setCropView(false);
+    cur.crops=[];store.put(cur);syncCropUI();toast('Crop removed.');return;
+  }
+  const wasOn=!!cur.crop;
+  cur.crops=list;
+  if(wasOn){store.put(cur);syncCropUI();const my=++token;await build(0,my);toast('Crop updated.')}
+  else{store.put(cur);await setCropView(true)}
+};
+
 /* ---------- Google sign-in + sync (Drive "app data" folder: private to this app, invisible in the user's Drive) ---------- */
 const gSync=(()=>{
   const SCOPE='https://www.googleapis.com/auth/drive.appdata openid email';
@@ -1282,7 +1430,7 @@ const gSync=(()=>{
   const tombs=()=>{try{return JSON.parse(LS('ss_gtomb')||'[]')}catch(e){return[]}};
   /* short fingerprint of the synced fields (Drive limits a property to 124 bytes) */
   const hash53=str=>{let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return (4294967296*(2097151&h2)+(h1>>>0)).toString(36)};
-  const sigOf=s=>hash53(JSON.stringify([s.name,s.folder||'All Songs',s.speed,s.bpm,s.zoom,s.notes||'',s.zones||[],s.secs||[],!!s.secOn]));
+  const sigOf=s=>hash53(JSON.stringify([s.name,s.folder||'All Songs',s.speed,s.bpm,s.zoom,s.notes||'',s.zones||[],s.secs||[],!!s.secOn,s.crops||[],!!s.crop,s.alt||null]));
   const ui={};
   function setStatus(t){if(ui.st)ui.st.textContent=t}
   function refreshUI(){
@@ -1371,13 +1519,13 @@ const gSync=(()=>{
           let pid=pf&&pf.id;
           if(s.blob&&!pid)pid=await upload('p_'+id+'.pdf',s.blob,'application/pdf',null,{});
           const sig=sigOf(s);
-          const mid=await upload('m_'+id+'.json',JSON.stringify({id,name:s.name,folder:s.folder||'All Songs',speed:s.speed,bpm:s.bpm,zoom:s.zoom,notes:s.notes||'',zones:s.zones||[],secs:s.secs||[],secOn:!!s.secOn,added:s.added||Date.now()}),'application/json',null,{sig});
+          const mid=await upload('m_'+id+'.json',JSON.stringify({id,name:s.name,folder:s.folder||'All Songs',speed:s.speed,bpm:s.bpm,zoom:s.zoom,notes:s.notes||'',zones:s.zones||[],secs:s.secs||[],secOn:!!s.secOn,crops:s.crops||[],crop:!!s.crop,alt:s.alt||null,added:s.added||Date.now()}),'application/json',null,{sig});
           R[id]={sig,mid,pid};up++;continue;
         }
         if(!s&&mf){ // new on another device → download
           const m=await (await download(mf.id)).json();
           let blob=null;if(pf)blob=await (await download(pf.id)).blob();
-          const ns={id,name:m.name,folder:m.folder||'All Songs',speed:m.speed||defSpeed,bpm:m.bpm||bpm,zoom:m.zoom||1,pos:0,notes:m.notes||'',zones:m.zones||[],secs:m.secs||[],secOn:!!m.secOn,added:m.added||Date.now(),blob};
+          const ns={id,name:m.name,folder:m.folder||'All Songs',speed:m.speed||defSpeed,bpm:m.bpm||bpm,zoom:m.zoom||1,pos:0,notes:m.notes||'',zones:m.zones||[],secs:m.secs||[],secOn:!!m.secOn,crops:m.crops||[],crop:!!m.crop,alt:m.alt||null,added:m.added||Date.now(),blob};
           await store.del.__origPut(ns);songs.push(ns);
           if(ns.folder&&!folders.includes(ns.folder))folders.push(ns.folder);
           R[id]={sig:sigOf(ns),mid:mf.id,pid:pf&&pf.id};down++;continue;
@@ -1392,7 +1540,7 @@ const gSync=(()=>{
             R[id]={sig:lsig,mid:mf.id,pid:pf&&pf.id};up++;
           }else{ // only remote changed → take it
             const m=await (await download(mf.id)).json();
-            Object.assign(s,{name:m.name,folder:m.folder||'All Songs',speed:m.speed||s.speed,bpm:m.bpm||s.bpm,zoom:m.zoom||s.zoom,notes:m.notes||'',zones:m.zones||[],secs:m.secs||[],secOn:!!m.secOn});
+            Object.assign(s,{name:m.name,folder:m.folder||'All Songs',speed:m.speed||s.speed,bpm:m.bpm||s.bpm,zoom:m.zoom||s.zoom,notes:m.notes||'',zones:m.zones||[],secs:m.secs||[],secOn:!!m.secOn,crops:m.crops||[],crop:!!m.crop,alt:m.alt||null});
             await store.del.__origPut(s);
             if(s.folder&&!folders.includes(s.folder))folders.push(s.folder);
             R[id]={sig:sigOf(s),mid:mf.id,pid:pf&&pf.id};down++;
@@ -1421,7 +1569,7 @@ const gSync=(()=>{
       else{setStatus('Sync failed: '+m);if(interactive)toast('Sync failed: '+m)}
     }finally{busy=false;if(dirty){dirty=false;sched()}}
   }
-  const metaOf=s=>({id:s.id,name:s.name,folder:s.folder||'All Songs',speed:s.speed,bpm:s.bpm,zoom:s.zoom,notes:s.notes||'',zones:s.zones||[],secs:s.secs||[],secOn:!!s.secOn,added:s.added||Date.now()});
+  const metaOf=s=>({id:s.id,name:s.name,folder:s.folder||'All Songs',speed:s.speed,bpm:s.bpm,zoom:s.zoom,notes:s.notes||'',zones:s.zones||[],secs:s.secs||[],secOn:!!s.secOn,crops:s.crops||[],crop:!!s.crop,alt:s.alt||null,added:s.added||Date.now()});
   function needsSync(){
     const R=rec();
     if(tombs().length)return true;
