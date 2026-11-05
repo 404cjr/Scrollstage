@@ -73,6 +73,24 @@ body.lib-open #lib{margin-left:0}
 #gSignIn{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1f1f1f;border:1px solid #dadce0;font-weight:600}
 #gSignIn svg{flex:none}
 #cropTog[hidden]{display:none}
+#stepTog{display:none}
+body.crop-view #stepTog{display:block}
+body.crop-view #stepTog.on{background:var(--a2);color:var(--on)}
+body.step-mode #secEdit>.sb-row:nth-of-type(2){display:none!important}
+body.crop-view #secAuto,body.crop-view #secAdd,body.crop-view #secClear,body.crop-view #secDel,body.crop-view .zb .zh{display:none!important}
+#cropPages[hidden],#cropOrder[hidden],#cropDraw[hidden]{display:none!important}
+#cropOrder{flex:1;overflow:auto;padding:8px 10px 40px;-webkit-overflow-scrolling:touch}
+.cp-empty{padding:30px 10px;text-align:center;color:#9aa0aa;font-size:14px}
+.cp-row{display:flex;align-items:center;gap:10px;max-width:760px;margin:0 auto 8px;padding:8px;background:#1d2026;border:1px solid #2c3038;border-radius:12px}
+.cp-th{flex:none;width:150px;max-height:84px;background:#fff;border-radius:6px;object-fit:contain}
+.cp-mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.cp-mid input{width:100%;box-sizing:border-box;padding:8px 9px;border-radius:8px;border:1px solid #3a3f4a;background:#14161a;color:#eee;font-size:14px}
+.cp-mid small{color:#9aa0aa;font-size:11px}
+.cp-acts{flex:none;display:flex;gap:6px}
+.cp-acts button{width:38px;height:38px;border-radius:9px;background:#2a2f38;color:#eee;font-size:17px}
+.cp-acts button:disabled{opacity:.3}
+@media(max-width:560px){.cp-row{flex-wrap:wrap}.cp-th{flex:1 1 100%;width:100%;max-height:96px}.cp-mid{flex:1 1 0}}
+
 #cropDlg{position:fixed;inset:0;z-index:70;background:#15171b;display:flex;flex-direction:column;color:#eee}
 #cropDlg[hidden]{display:none}
 .cp-bar{padding:10px 12px;background:#1d2026;border-bottom:1px solid #2c3038;display:flex;flex-direction:column;gap:8px}
@@ -84,6 +102,8 @@ body.lib-open #lib{margin-left:0}
 .cp-ov{position:absolute;inset:0}
 #cropDlg.drawing .cp-ov{touch-action:none;cursor:crosshair}
 .cp-box{position:absolute;box-sizing:border-box;border:2px solid #1f7aff;background:rgba(31,122,255,.18);pointer-events:none}
+.cp-pend{position:absolute;left:0;right:0;height:0;border-top:2px dashed #1f7aff;pointer-events:none}
+.cp-pend::before{content:'start · tap where it ends';position:absolute;left:4px;top:-20px;background:#1f7aff;color:#fff;font-size:11px;padding:2px 7px;border-radius:9px;white-space:nowrap}
 .cp-box.tmp{background:rgba(31,122,255,.1);border-style:dashed}
 .cp-x{pointer-events:auto;position:absolute;top:2px;right:2px;width:30px;height:30px;border-radius:50%;background:#1f7aff;color:#fff;font-size:16px;line-height:30px;text-align:center}
 .cp-n{position:absolute;left:4px;top:2px;background:#1f7aff;color:#fff;font-size:11px;padding:1px 6px;border-radius:9px}
@@ -197,7 +217,7 @@ button{touch-action:manipulation}
 .hint{font-size:12px;color:var(--mute);margin-top:8px;line-height:1.4}
 /* stage */
 #stage{flex:1;min-width:0;position:relative;background:var(--stage)}
-#scroller{position:absolute;inset:0;overflow:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+#scroller{position:absolute;inset:0;padding:50vh 0;box-sizing:border-box;overflow:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 #scroller::-webkit-scrollbar{display:none}
 #pages{margin:0 auto}
 .page{position:relative;background:#fff;margin:0 0 3px;overflow:hidden;transition:filter 0.2s ease}
@@ -326,6 +346,7 @@ body.lib-open #scrim{display:block;position:absolute;inset:0;background:rgba(0,0
       <div class="sb-row" id="secTools">
         <button class="pri" id="secAuto" title="Find Verse, Chorus, Bridge… labels in the PDF and add a section for each">Detect</button>
         <button id="secAdd">+ Add</button>
+        <button id="stepTog" title="Wait on each block for its length, then jump to the next one">Jump: off</button>
         <button id="secClear">Clear</button>
         <button id="secTap" title="Play the real song and tap at each section start to copy its timing">Tap-time</button>
       </div>
@@ -380,15 +401,17 @@ body.lib-open #scrim{display:block;position:absolute;inset:0;background:rgba(0,0
 </div>
 <div id="cropDlg" hidden>
   <div class="cp-bar">
-    <div class="cp-hint">Turn on <b>Draw boxes</b>, then drag a box around the part of each page you want, like the chord line. Tap ✕ on a box to remove it. Turn drawing off to scroll.</div>
+    <div class="cp-hint"><b>Tap</b> where a part starts on the page, then <b>tap</b> where it ends. That makes one block (a chord line, a section). You can scroll freely. For a narrower box, turn on <b>Draw boxes</b> and drag. Use <b>Order &amp; repeats</b> to name blocks, move them and copy one to repeat it.</div>
     <div class="cp-btns">
       <button class="btn-sec" id="cropDraw">Draw boxes: off</button>
+      <button class="btn-sec" id="cropOrderBtn">Order &amp; repeats</button>
       <button class="btn-sec" id="cropClear">Clear all</button>
       <button class="btn-sec" id="cropCancel">Cancel</button>
       <button class="add" id="cropDone">Done</button>
     </div>
   </div>
   <div id="cropPages"></div>
+  <div id="cropOrder" hidden></div>
 </div>
 <input type="file" id="file" accept="application/pdf,.pdf" multiple hidden>
 <input type="file" id="importFile" accept=".sstg,.scrollstage,application/json" hidden>
@@ -531,12 +554,20 @@ try{const v=parseFloat(localStorage.getItem('ss_devscale'));devScale=v>=1&&v<=3?
 const layoutW=()=>Math.max(240,(($('#app').clientWidth||innerWidth)-68)*devScale);
 /* Speed is tied to the sheet width (and page height), so one page takes the same number of seconds
    on every device and at every sheet size. Same musical speed everywhere. */
-const SC=()=>(pw||layoutW())/REF_W;
+/* A cropped line of music is short and read left to right, so it has to scroll much slower than a full page:
+   the same speed levels are 5x slower in the cropped view. */
+const CROP_SLOW=0.2;
+const SC=()=>(pw||layoutW())/REF_W*(cur&&cur.crop?CROP_SLOW:1);
 const pageH=()=>(pw||layoutW())*pgRatio;
-/* The playhead: speeds and sections are read from a line just below the top of the screen. Its distance from the top is a share of
-   the sheet width (not of the screen height), so a section starts at the same musical moment on every device and screen shape. */
-const PLAYHEAD=0.06;
-const playY=()=>scroller.scrollTop+PLAYHEAD*(pw||layoutW());
+/* The playhead is the middle of the screen: that is where you look at what you are playing.
+   Sections and speed changes are read from that line. The scroller has half a screen of blank space above and below the
+   sheet, so the first section can start exactly at the middle when Play is pressed (same on every device).
+   Section positions are stored as fractions of the sheet itself (not of the blank space). */
+const docTop=()=>pagesEl.offsetTop;
+const docH=()=>pagesEl.offsetHeight||1;
+const fracAt=y=>(y-docTop())/docH();
+const yAt=f=>docTop()+f*docH();
+const playY=()=>scroller.scrollTop+scroller.clientHeight*0.5;
 const spd=()=>mode==='bpm'?bpm/60/bps*pageH():4*Math.pow(1.04,speed)*SC();
 
 /* ---------- Export & Import (.sstg) ---------- */
@@ -582,7 +613,7 @@ $('#exportBtn').onclick = async () => {
         zones: s.zones,
         secs: s.secs,
         secOn: s.secOn,
-        crops: s.crops, crop: s.crop, alt: s.alt,
+        crops: s.crops, crop: s.crop, alt: s.alt, step: s.step,
         added: s.added,
         blobData: b64
       });
@@ -606,7 +637,7 @@ $('#shareBtn').onclick = async () => {
   try {
     const data = [];
     for (const s of list) {
-      data.push({id:s.id,name:s.name,folder:s.folder||'All Songs',speed:s.speed,bpm:s.bpm,zoom:s.zoom,pos:0,notes:s.notes,zones:s.zones,secs:s.secs,secOn:s.secOn,crops:s.crops,crop:s.crop,alt:s.alt,added:s.added,blobData:s.blob?await blobToBase64(s.blob):null});
+      data.push({id:s.id,name:s.name,folder:s.folder||'All Songs',speed:s.speed,bpm:s.bpm,zoom:s.zoom,pos:0,notes:s.notes,zones:s.zones,secs:s.secs,secOn:s.secOn,crops:s.crops,crop:s.crop,alt:s.alt,step:s.step,added:s.added,blobData:s.blob?await blobToBase64(s.blob):null});
     }
     const base = ((activeFolder && activeFolder !== 'All Songs') ? activeFolder : 'Setlist').replace(/[^\w\- ]+/g,'').trim() || 'Setlist';
     const file = new File([JSON.stringify(data)], base + '.sstg', {type:'application/json'});
@@ -643,7 +674,7 @@ $('#importFile').onchange = async (e) => {
           zones: Array.isArray(item.zones) ? item.zones : [],
           secs: Array.isArray(item.secs) ? item.secs : [],
           secOn: !!item.secOn,
-          crops: Array.isArray(item.crops) ? item.crops : [], crop: !!item.crop, alt: item.alt || null,
+          crops: Array.isArray(item.crops) ? item.crops : [], crop: !!item.crop, alt: item.alt || null, step: !!item.step,
           added: item.added || Date.now(),
           blob: item.blobData ? dataURItoBlob(item.blobData) : null
         };
@@ -759,12 +790,19 @@ async function build(restore,my){
   // cropped view: each box becomes its own strip, scaled to the full width of the sheet
   strips.forEach(c=>{const d=document.createElement('div');d.className='page';d.dataset.n=c.n;d.dataset.s=cur.crops.indexOf(c);d.style.height=Math.round(pw*((c.y1-c.y0)*v1.height)/((c.x1-c.x0)*v1.width))+'px';pagesEl.appendChild(d)});
   pgRatio=(pagesEl.firstChild.offsetHeight||Math.round(pw*ratio))/pw;
+  // every block is its own section, so each one can have its own speed or length (and repeats play at their own pace)
+  {const H=docH(),sr=pagesEl.getBoundingClientRect().top;
+   cur.secs=[...pagesEl.querySelectorAll('.page')].map((el,i)=>{
+    const c=cur.crops[+el.dataset.s],top=el.getBoundingClientRect().top-sr;
+    const z={a:Math.max(0,top/H),b:Math.min(1,(top+el.offsetHeight)/H),name:c.name||('Block '+(i+1)),blk:+el.dataset.s};
+    if(typeof c.sp==='number')z.sp=c.sp;if(typeof c.bp==='number')z.bp=c.bp;if(typeof c.dur==='number')z.dur=c.dur;return z;
+   });cur.secOn=true;syncSec()}
  }else{
   for(let i=1;i<=pdf.numPages;i++){const d=document.createElement('div');d.className='page';d.dataset.n=i;d.style.height=Math.round(pw*ratio)+'px';pagesEl.appendChild(d)}
  }
  obs=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting)renderPage(e.target,my)}),{root:scroller,rootMargin:'150% 0px'});
- [...pagesEl.children].forEach(c=>obs.observe(c));
- scroller.scrollTop=typeof restore==='number'?restore:Math.max(0,firstSecTop());pos=scroller.scrollTop;expect=pos;
+ [...pagesEl.querySelectorAll('.page')].forEach(c=>obs.observe(c));
+ scroller.scrollTop=typeof restore==='number'?(restore===0?Math.max(0,docTop()-10):restore+((cur&&cur.pv===2)?0:docTop())):Math.max(0,docTop()-10);pos=scroller.scrollTop;expect=pos;
  scroller.scrollLeft=Math.max(0,(scroller.scrollWidth-scroller.clientWidth)/2);
  renderZones();
 }
@@ -799,7 +837,7 @@ let last=0,pos=0,expect=0,hold=false,holdT,raf=0,lock=null;
 /* Speeds up the scroll while the reading line crosses the gap between two pages,
    easing in and out so it never jolts. */
 function pbMult(){
- if(!pbOn||pbAmt<=1)return 1;
+ if(!pbOn||pbAmt<=1||(cur&&cur.crop))return 1;   // no page-change boost between cropped blocks
  const pg=pagesEl.children;if(pg.length<2)return 1;
  const zone=pg[0].offsetHeight*0.06;   // reach of the boost on each side of a page edge
  const y=playY(); // the playhead
@@ -815,14 +853,33 @@ function pbMult(){
 let secCur=1;
 function secTarget(){
  if(!cur||!cur.zones||!cur.zones.length)return 1;
- const f=playY()/(scroller.scrollHeight||1);
+ const f=fracAt(playY());
  let m=1;for(const z of cur.zones){if(f>=z.a&&f<=z.b)m=z.m}
  return m;
 }
 function secMult(dt){const t=secTarget();secCur+=(t-secCur)*Math.min(1,dt*5);return secCur}
+/* Jump mode (cropped view): each block waits for its own time, then the screen jumps to the next block */
+let stepIdx=0,stepLeft=0,stepTarget=0;
+function stepTops(){const sr=scroller.getBoundingClientRect().top;return [...pagesEl.querySelectorAll('.page[data-s]')].map(el=>el.getBoundingClientRect().top-sr+scroller.scrollTop)}
+function stepGo(i){
+  const t=stepTops(),el=pagesEl.querySelectorAll('.page[data-s]')[i],m=Math.max(0,scroller.scrollHeight-scroller.clientHeight);
+  stepIdx=i;stepTarget=Math.max(0,Math.min(m,Math.round((t[i]||0)+(el?el.offsetHeight:0)/2-scroller.clientHeight/2)));   // the block waits in the middle of the screen
+  setLive(cur.secs[i]||null);
+}
 function tick(t){
  if(!playing)return;
- const dt=Math.min(.05,(t-last)/1000);last=t;
+ const rdt=(t-last)/1000,dt=Math.min(.05,rdt);last=t;
+ if(!hold&&stepOn()){
+  if(Math.abs(scroller.scrollTop-expect)>2)pos=scroller.scrollTop;
+  stepLeft-=Math.min(rdt,.25);
+  if(stepLeft<=0){
+   if(stepIdx+1>=cur.secs.length){setPlaying(false);return}
+   stepGo(stepIdx+1);stepLeft+=stepDur(cur.secs[stepIdx]);
+  }
+  pos+=(stepTarget-pos)*Math.min(1,dt*14);if(Math.abs(stepTarget-pos)<.5)pos=stepTarget;
+  scroller.scrollTop=pos;expect=scroller.scrollTop;
+  raf=requestAnimationFrame(tick);return;
+ }
  if(!hold){
   if(Math.abs(scroller.scrollTop-expect)>2)pos=scroller.scrollTop;
   pos+=(secOn()?secSpeed(dt):spd()*secMult(dt))*pbMult()*dt;
@@ -870,11 +927,15 @@ async function setPlaying(p){
 async function startPlayingEngine() {
  playing=true;$('#play').innerHTML=IC.pause;$('#play').classList.add('on');
  cancelAnimationFrame(raf);
- if(selZone){selZone=null;renderZones()}{const ft=firstSecTop();if(ft>=0&&scroller.scrollTop<ft)scroller.scrollTop=ft} /* start from the first section */
+ if(selZone){selZone=null;renderZones()}{const ft=firstSecTop();if(ft>=0&&(scroller.scrollTop<ft-2||scroller.scrollTop<=docTop()+4))scroller.scrollTop=ft} /* start from the first section, at the middle of the screen */
  startForce=null;
- if(secOn()&&cur&&cur.secs&&cur.secs.length){
-  const H=scroller.scrollHeight||1,t=(scroller.scrollTop+8)/H,vis=(scroller.scrollTop+scroller.clientHeight)/H;
-  startForce=cur.secs.find(z=>t>=z.a-0.004&&t<=z.b)||cur.secs.filter(z=>z.a>t&&z.a<vis).sort((a,b)=>a.a-b.a)[0]||null;
+ if(stepOn()){
+  // start on the block at the top of the screen (or the first one) and wait there
+  const tops=stepTops();let i=0;tops.forEach((y,k)=>{if(y<=playY())i=k});if(scroller.scrollTop<=docTop()+4)i=0;   // pressing Play at the very top starts on the first block
+  stepGo(i);stepLeft=stepDur(cur.secs[i]);scroller.scrollTop=stepTarget;pos=stepTarget;expect=scroller.scrollTop;
+  liveSec=null;document.body.classList.add('playing');last=performance.now();raf=requestAnimationFrame(tick);
+  try{if(navigator.wakeLock)lock=await navigator.wakeLock.request('screen')}catch(e){}
+  return;
  }
  secCur=secTarget();secPxCur=secOn()?secTargetPx():0;liveSec=null;document.body.classList.add('playing');pos=scroller.scrollTop;expect=pos;last=performance.now();raf=requestAnimationFrame(tick);
  try{if(navigator.wakeLock)lock=await navigator.wakeLock.request('screen')}catch(e){}
@@ -935,12 +996,12 @@ vs.addEventListener('keydown',e=>{if(e.key==='ArrowUp'||e.key==='ArrowRight'){nu
 /* ---------- zoom, top, fold ---------- */
 function setZoom(z){
  if(!pdf)return;zoom=Math.max(.6,Math.min(2.4,Math.round(z*10)/10));
- const r=scroller.scrollHeight?scroller.scrollTop/scroller.scrollHeight:0;
+ const r=fracAt(scroller.scrollTop+scroller.clientHeight*0.5);
  const my=++token;cur&&(cur.zoom=zoom);
- build(0,my).then(()=>{scroller.scrollTop=r*scroller.scrollHeight;pos=scroller.scrollTop;expect=pos;schedSave()});
+ build(0,my).then(()=>{scroller.scrollTop=Math.max(0,yAt(r)-scroller.clientHeight*0.5);pos=scroller.scrollTop;expect=pos;schedSave()});
 }
 $('#zin').onclick=()=>setZoom(zoom+.2);$('#zout').onclick=()=>setZoom(zoom-.2);
-$('#top').onclick=()=>{scroller.scrollTop=0;pos=0;expect=0};
+$('#top').onclick=()=>{const t=Math.max(0,docTop()-10);scroller.scrollTop=t;pos=t;expect=t};
 $('#fold').onclick=()=>{const m=$('#rail').classList.toggle('min');$('#fold').setAttribute('aria-label',m?'Show controls':'Hide controls');schedResize()};
 
 /* ---------- sheet size (per device) ---------- */
@@ -950,9 +1011,11 @@ $('#fold').onclick=()=>{const m=$('#rail').classList.toggle('min');$('#fold').se
 
 /* ---------- save + resize ---------- */
 let st;function schedSave(){clearTimeout(st);st=setTimeout(saveNow,500)}
-function saveNow(){if(!cur)return;cur.pos=scroller.scrollTop;cur.speed=speed;cur.bpm=bpm;cur.zoom=zoom;store.put(cur)}
+function saveNow(){if(!cur)return;
+ if(cur.crop&&cur.crops&&cur.secs)cur.secs.forEach(z=>{const c=cur.crops[z.blk];if(c){if(typeof z.sp==='number')c.sp=z.sp;if(typeof z.bp==='number')c.bp=z.bp;if(typeof z.dur==='number')c.dur=z.dur;if(z.name)c.name=z.name}});
+ cur.pos=scroller.scrollTop;cur.pv=2;cur.speed=speed;cur.bpm=bpm;cur.zoom=zoom;store.put(cur)}
 let rt,lw=0;
-function schedResize(){clearTimeout(rt);rt=setTimeout(()=>{if(!pdf)return;const w=layoutW();if(Math.abs(w-lw)<3)return;lw=w;const r=scroller.scrollTop/(scroller.scrollHeight||1);const my=++token;build(0,my).then(()=>{scroller.scrollTop=r*scroller.scrollHeight;pos=scroller.scrollTop;expect=pos})},250)}
+function schedResize(){clearTimeout(rt);rt=setTimeout(()=>{if(!pdf)return;const w=layoutW();if(Math.abs(w-lw)<3)return;lw=w;const r=fracAt(scroller.scrollTop+scroller.clientHeight*0.5);const my=++token;build(0,my).then(()=>{scroller.scrollTop=Math.max(0,yAt(r)-scroller.clientHeight*0.5);pos=scroller.scrollTop;expect=pos})},250)}
 new ResizeObserver(()=>{setSpeed(mode==='bpm'?bpm:speed,true);schedResize()}).observe($('#stage'));
 addEventListener('pagehide',saveNow);
 
@@ -970,10 +1033,10 @@ nt.addEventListener('input',()=>{if(!cur)return;cur.notes=nt.value.slice(0,5000)
 const MIN_ZONE_PX=70;
 const minZonePx=()=>secOn()?32:MIN_ZONE_PX; /* section brackets can be short, so neighbours don't overlap */
 /* where the first section starts (px), or -1 */
-function firstSecTop(){if(!secOn()||!cur||!cur.secs||!cur.secs.length)return -1;return Math.max(0,Math.round(Math.min(...cur.secs.map(z=>z.a))*zoneH())-12)}
+function firstSecTop(){if(!secOn()||!cur||!cur.secs||!cur.secs.length)return -1;return Math.max(0,Math.round(yAt(Math.min(...cur.secs.map(z=>z.a)))-scroller.clientHeight*0.5))}   // scroll position that puts the first section at the middle
 let selZone=null,zT,barZone=null,secPxCur=0,liveSec=null,secEditing=false;
 const fmtM=m=>(Math.round(m*100)/100)+'x';
-const zoneH=()=>scroller.scrollHeight||1;
+const zoneH=()=>docH();
 const secOn=()=>!!(cur&&cur.secOn);
 /* Z() is the active bracket list: song sections in section mode, the original multiplier brackets otherwise */
 const Z=()=>!cur?[]:secOn()?(cur.secs||(cur.secs=[])):(cur.zones||(cur.zones=[]));
@@ -999,13 +1062,13 @@ const baseName=z=>(z.name||'Section').replace(/\s*\d+\s*$/,'').trim()||'Section'
 let startForce=null;
 function secFind(){
  if(!cur||!cur.secs||!cur.secs.length)return null;
- const H=scroller.scrollHeight||1;
+ const H=docH();
  if(startForce){
   const t=(scroller.scrollTop+8)/H;
   if(cur.secs.includes(startForce)&&t>=startForce.a-0.01&&t<=startForce.b)return startForce;
   startForce=null;
  }
- const f=playY()/H;
+ const f=fracAt(playY());
  let r=null;for(const z of cur.secs){if(f>=z.a&&f<=z.b)r=z}
  return r;
 }
@@ -1066,7 +1129,7 @@ function fillSecEdit(){
  r.min=bp?40:1;r.max=bp?200:100;r.step=1;r.value=spShown(z);
  $('#secVal').textContent=spShown(z)+(bp?' BPM':'');
  $('#secName').value=z.name||'';updTime();
- $('#secAll').textContent='Same speed for all “'+baseName(z)+'”';
+ $('#secAll').textContent=(stepOn()?'Same wait for all “':'Same speed for all “')+baseName(z)+'”';
  const b=baseName(z).toLowerCase();$('#secAll').style.display=Z().filter(o=>baseName(o).toLowerCase()===b).length>1?'':'none';
 }
 function renderSecBar(){
@@ -1093,6 +1156,7 @@ $('#secName').oninput=e=>{
 $('#secAll').onclick=()=>{
  const z=selZone;if(!z)return;
  const b=baseName(z).toLowerCase();let n=0;
+ if(stepOn()){Z().forEach(o=>{if(baseName(o).toLowerCase()===b){o.dur=stepDur(z);n++}});schedSave();renderZones();toast('Set '+n+' “'+baseName(z)+'” block'+(n===1?'':'s')+' to wait '+fmtT(stepDur(z))+'.');return}
  Z().forEach(o=>{if(baseName(o).toLowerCase()===b){o.sp=z.sp;o.bp=z.bp;n++}});
  schedSave();renderZones();toast('Set '+n+' “'+baseName(z)+'” section'+(n===1?'':'s')+' to '+spShown(z)+(mode==='bpm'?' BPM':'')+'.');
 };
@@ -1117,7 +1181,9 @@ $('#secBtn').onclick=()=>{
 /* ---------- match the real song's timing ---------- */
 const secLen=z=>(z.b-z.a)*zoneH();                       // section length in px
 const fmtT=s=>{s=Math.max(0,Math.round(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
-function updTime(){const z=selZone;if(!z||!z.b)return;$('#secTime').value=fmtT(secLen(z)/zPx(z))}
+const stepOn=()=>!!(cur&&cur.crop&&cur.step&&cur.secs&&cur.secs.length);
+const stepDur=z=>(z&&typeof z.dur==='number'&&z.dur>0)?z.dur:8;   // how long a block waits before the jump (seconds)
+function updTime(){const z=selZone;if(!z||!z.b)return;$('#secTime').value=stepOn()?fmtT(stepDur(z)):fmtT(secLen(z)/zPx(z))}
 /* sets the speed so the section scrolls past in exactly `secs` seconds; returns false if the speed range can't reach it */
 function setSecDur(z,secs){
  const px=secLen(z)/secs;
@@ -1132,6 +1198,7 @@ function parseT(v){
 $('#secTime').onchange=e=>{
  const z=selZone;if(!z)return;
  const secs=parseT(e.target.value);
+ if(stepOn()){if(secs<1){updTime();toast('Enter a wait like 0:12.');return}z.dur=secs;fillSecEdit();schedSave();renderZones();return}
  if(secs<2){updTime();toast('Enter a length like 0:45.');return}
  const ok=setSecDur(z,secs);
  fillSecEdit();schedSave();renderZones();
@@ -1147,7 +1214,7 @@ function tapUI(){
 $('#secTap').onclick=()=>{
  if(!cur||!(cur.secs&&cur.secs.length)){toast('Tap Detect or add sections first.');return}
  tap={i:0,t:[]};selZone=null;renderZones();tapUI();
- toast('Start the real song, then tap at the start of each section.');
+ toast(stepOn()?'Start the real song, then tap as each block starts.':'Start the real song, then tap at the start of each section.');
 };
 $('#secTapCancel').onclick=()=>{tap=null;tapUI()};
 $('#secTapNext').onclick=()=>{
@@ -1156,8 +1223,10 @@ $('#secTapNext').onclick=()=>{
  const zs=cur.secs;
  if(tap.i<=zs.length){tapUI();return}
  let bad=0;
- zs.forEach((z,k)=>{const d=(tap.t[k+1]-tap.t[k])/1000;if(d<1){bad++;return}if(!setSecDur(z,d))bad++});
+ const jump=stepOn();
+ zs.forEach((z,k)=>{const d=(tap.t[k+1]-tap.t[k])/1000;if(d<1){bad++;return}if(jump){z.dur=Math.round(d*10)/10;return}if(!setSecDur(z,d))bad++});
  tap=null;tapUI();selZone=null;commitZones();
+ if(jump){toast(bad?'Timed. '+bad+' block'+(bad===1?' was':'s were')+' too short, so check them.':'Done. Every block now waits as long as the real song, then jumps.');return}
  toast(bad?'Timed. '+bad+' section'+(bad===1?' was':'s were')+' too short or outside the speed range, so check them.':'Done. Every section now lasts as long as the real one.');
 };
 
@@ -1190,7 +1259,7 @@ async function detectSections(){
     txt=txt.replace(/\s+/g,' ').trim();
     if(txt.length>32||!SEC_RE.test(txt))continue;
     const top=el.offsetTop+Math.max(0,L.y-L.h*1.2)/vp.height*el.offsetHeight;
-    const a=Math.max(0,Math.min(.999,top/H));
+    const a=Math.max(0,Math.min(.999,(top-docTop())/H));
     if(found.length&&Math.abs(a-found[found.length-1].a)<.002)continue;
     found.push({a,name:cleanName(txt)||'Section'});
    }
@@ -1208,7 +1277,7 @@ $('#secAuto').onclick=detectSections;
 /* ---------- bracket drawing + dragging ---------- */
 function schedZones(){clearTimeout(zT);zT=setTimeout(renderZones,250)}
 function commitZones(){schedSave();renderZones()}
-function placeZone(el,z){const H=zoneH();el.style.top=Math.round(z.a*H)+'px';const h=Math.max(minZonePx(),Math.round((z.b-z.a)*H));el.style.height=h+'px';el.style.zIndex=Math.max(1,2000-h)}   // shorter brackets sit on top so a small section can never be buried under its neighbour
+function placeZone(el,z){const H=zoneH();el.style.top=Math.round(yAt(z.a))+'px';const h=Math.max(minZonePx(),Math.round((z.b-z.a)*H));el.style.height=h+'px';el.style.zIndex=Math.max(1,2000-h)}   // shorter brackets sit on top so a small section can never be buried under its neighbour
 
 function renderZones(){
  const mk=$('#mk');mk.innerHTML='';
@@ -1289,7 +1358,7 @@ $('#zadd').onclick=()=>{
  if(!cur){toast('Open a PDF first.');return}
  if(secOn()&&!secEditing){toast('Tap Edit to add sections.');return}
  const H=zoneH(),len=Math.min(.5,Math.max(minZonePx()/H,scroller.clientHeight*0.4/H));
- const mid=(scroller.scrollTop+scroller.clientHeight*0.5)/H;
+ const mid=fracAt(scroller.scrollTop+scroller.clientHeight*0.5);
  let a=Math.max(0,Math.min(1-len,mid-len/2));
  const zs=Z(),sec=secOn();
  for(let i=0;i<zs.length;i++){const k=zs[i];if(a<k.b&&a+len>k.a){a=k.b+.004;i=-1}} // slide past any bracket already here
@@ -1326,6 +1395,9 @@ function syncCropUI(){
   const b=$('#cropTog');if(!b)return;
   const has=!!(cur&&cur.crops&&cur.crops.length);
   b.hidden=!has;b.classList.toggle('on',!!(cur&&cur.crop));
+  document.body.classList.toggle('crop-view',!!(cur&&cur.crop&&has));
+  document.body.classList.toggle('step-mode',stepOn());
+  const st=$('#stepTog');if(st){st.classList.toggle('on',!!(cur&&cur.step));st.textContent='Jump: '+(cur&&cur.step?'on':'off')}
 }
 function swapView(){
   const a=cur.alt||{zones:[],secs:[],secOn:false};
@@ -1337,32 +1409,49 @@ async function setCropView(on){
   on=!!on&&!!(cur.crops&&cur.crops.length);
   if(on===!!cur.crop)return;
   setPlaying(false);
-  swapView();cur.crop=on;selZone=null;store.put(cur);
+  swapView();cur.crop=on;if(on)cur.secOn=true;selZone=null;store.put(cur);
   syncSec();
   const my=++token;await build(0,my);
   toast(on?'Cropped view. Tap the crop button to go back to the full sheet.':'Full sheet.');
 }
 $('#cropTog').innerHTML='<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14M2 6h14a2 2 0 0 1 2 2v14"/></svg>';
 $('#cropTog').onclick=()=>setCropView(!(cur&&cur.crop));
+$('#stepTog').onclick=()=>{
+  if(!cur||!cur.crop)return;
+  setPlaying(false);cur.step=!cur.step;store.put(cur);syncCropUI();
+  if(selZone){fillSecEdit();updTime()}
+  toast(cur.step?'Jump on: each block waits its length, then jumps to the next. Set it with Length.':'Jump off: smooth scrolling.');
+};
 
 let cropDraft=[],cropDrawOn=false,cropRun=0;
-function cropSorted(){return cropDraft.slice().sort((a,b)=>a.n-b.n||a.y0-b.y0)}
+function cropSorted(){return cropDraft}   // blocks keep the order you arrange them in
 function drawCropBoxes(n){
   const wrap=document.querySelector('.cp-page[data-n="'+n+'"]');if(!wrap)return;
   const ov=wrap.querySelector('.cp-ov');ov.querySelectorAll('.cp-box:not(.tmp)').forEach(e=>e.remove());
-  const order=cropSorted();
+  const order=cropSorted(),shown=new Set();
   cropDraft.filter(c=>c.n===n).forEach(c=>{
+    const key=[c.x0,c.x1,c.y0,c.y1].join();if(shown.has(key))return;shown.add(key);
+    const same=order.map((o,i)=>o.n===n&&o.x0===c.x0&&o.x1===c.x1&&o.y0===c.y0&&o.y1===c.y1?i+1:0).filter(Boolean);
     const d=document.createElement('div');d.className='cp-box';
     d.style.cssText='left:'+c.x0*100+'%;top:'+c.y0*100+'%;width:'+(c.x1-c.x0)*100+'%;height:'+(c.y1-c.y0)*100+'%';
-    const lab=document.createElement('span');lab.className='cp-n';lab.textContent=order.indexOf(c)+1;
+    const lab=document.createElement('span');lab.className='cp-n';lab.textContent=same.join(' · ');
     const x=document.createElement('button');x.className='cp-x';x.type='button';x.textContent='✕';x.setAttribute('aria-label','Remove box');
-    x.onclick=e=>{e.stopPropagation();cropDraft.splice(cropDraft.indexOf(c),1);document.querySelectorAll('.cp-page').forEach(w=>drawCropBoxes(+w.dataset.n))};
+    x.onclick=e=>{e.stopPropagation();cropDraft=cropDraft.filter(o=>!(o.n===n&&o.x0===c.x0&&o.x1===c.x1&&o.y0===c.y0&&o.y1===c.y1));document.querySelectorAll('.cp-page').forEach(w=>drawCropBoxes(+w.dataset.n))};
     d.append(lab,x);ov.appendChild(d);
   });
 }
+let cropPend=null;   // first tap of a tap-tap box: {n,y}
+function showPend(){
+  document.querySelectorAll('.cp-pend').forEach(e=>e.remove());
+  if(!cropPend)return;
+  const wrap=document.querySelector('.cp-page[data-n="'+cropPend.n+'"]');if(!wrap)return;
+  const d=document.createElement('div');d.className='cp-pend';d.style.top=cropPend.y*100+'%';
+  wrap.querySelector('.cp-ov').appendChild(d);
+}
 function attachCropDraw(ov,n){
-  let drag=null;
+  let drag=null,rec=null;
   ov.addEventListener('pointerdown',e=>{
+    rec=e.target===ov?{x:e.clientX,y:e.clientY}:null;
     if(!cropDrawOn||e.target!==ov)return;
     ov.setPointerCapture(e.pointerId);
     const r=ov.getBoundingClientRect(),tmp=document.createElement('div');tmp.className='cp-box tmp';ov.appendChild(tmp);
@@ -1379,14 +1468,25 @@ function attachCropDraw(ov,n){
     if(d.x1!==undefined&&d.x1-d.x0>=0.2&&d.y1-d.y0>=0.015)cropDraft.push({n,x0:d.x0,x1:d.x1,y0:d.y0,y1:d.y1});
     drawCropBoxes(n);
   };
-  ov.addEventListener('pointerup',end);ov.addEventListener('pointercancel',end);
+  ov.addEventListener('pointerup',e=>{
+    const r=rec;rec=null;
+    if(drag){end();return}
+    // a tap (not a scroll or drag): first tap = where the part starts, second tap = where it ends
+    if(!r||Math.hypot(e.clientX-r.x,e.clientY-r.y)>10)return;
+    const bb=ov.getBoundingClientRect(),y=Math.max(0,Math.min(1,(e.clientY-bb.top)/bb.height));
+    if(cropPend&&cropPend.n===n){
+      const y0=Math.min(cropPend.y,y),y1=Math.max(cropPend.y,y);cropPend=null;showPend();
+      if(y1-y0>=0.015){cropDraft.push({n,x0:0.03,x1:0.97,y0,y1});drawCropBoxes(n)}
+    }else{cropPend={n,y};showPend()}
+  });
+  ov.addEventListener('pointercancel',()=>{rec=null;end()});
 }
 function setCropDraw(v){cropDrawOn=v;$('#cropDlg').classList.toggle('drawing',v);const b=$('#cropDraw');b.classList.toggle('on',v);b.textContent='Draw boxes: '+(v?'on':'off')}
 async function openCropEditor(){
   if(!cur||!pdf){toast('Open a song first.');return}
-  setPlaying(false);
+  setPlaying(false);saveNow();   // pick up any speed changes made to the blocks
   cropDraft=((cur.crops)||[]).map(c=>({...c}));
-  const host=$('#cropPages');host.innerHTML='';setCropDraw(false);
+  const host=$('#cropPages');host.innerHTML='';cropPend=null;setCropDraw(false);setCropTab('pages');
   $('#cropDlg').hidden=false;setLib(false);
   const run=++cropRun,W=Math.min(innerWidth-24,860),dpr=Math.min(devicePixelRatio||1,2);
   for(let n=1;n<=pdf.numPages;n++){
@@ -1402,11 +1502,46 @@ async function openCropEditor(){
 }
 $('#cropBtn').onclick=openCropEditor;
 $('#cropDraw').onclick=()=>setCropDraw(!cropDrawOn);
-$('#cropClear').onclick=()=>{cropDraft=[];document.querySelectorAll('.cp-page').forEach(w=>drawCropBoxes(+w.dataset.n))};
-$('#cropCancel').onclick=()=>{cropRun++;$('#cropDlg').hidden=true};
+/* Order & repeats: name, move, copy and remove blocks */
+let cropTab='pages',thumbRun=0;
+function setCropTab(v){
+  cropTab=v;$('#cropPages').hidden=v!=='pages';$('#cropOrder').hidden=v!=='order';$('#cropDraw').hidden=v==='order';
+  $('#cropOrderBtn').textContent=v==='order'?'Back to pages':'Order & repeats';
+  if(v==='order'){setCropDraw(false);renderCropOrder()}else document.querySelectorAll('.cp-page').forEach(w=>drawCropBoxes(+w.dataset.n));
+}
+async function cropThumb(c,cv,run){
+  try{
+    const pg=await pdf.getPage(c.n),b=pg.getViewport({scale:1}),sw=(c.x1-c.x0)*b.width,sh=(c.y1-c.y0)*b.height;
+    let k=300/sw;if(sh*k>170)k=170/sh;
+    cv.width=Math.max(1,Math.floor(sw*k));cv.height=Math.max(1,Math.floor(sh*k));
+    if(run!==thumbRun)return;
+    await pg.render({canvasContext:cv.getContext('2d'),viewport:pg.getViewport({scale:k}),transform:[1,0,0,1,-c.x0*b.width*k,-c.y0*b.height*k]}).promise;
+  }catch(e){}
+}
+function renderCropOrder(){
+  const host=$('#cropOrder');host.innerHTML='';const run=++thumbRun;
+  if(!cropDraft.length){host.innerHTML='<div class="cp-empty">No blocks yet. Go back to the pages and draw a box around each part you want.</div>';return}
+  const move=(i,j)=>{if(j<0||j>=cropDraft.length)return;const t=cropDraft[i];cropDraft[i]=cropDraft[j];cropDraft[j]=t;renderCropOrder()};
+  cropDraft.forEach((c,i)=>{
+    const row=document.createElement('div');row.className='cp-row';
+    const cv=document.createElement('canvas');cv.className='cp-th';
+    const mid=document.createElement('div');mid.className='cp-mid';
+    const nm=document.createElement('input');nm.value=c.name||'';nm.placeholder='Block '+(i+1);nm.maxLength=24;nm.setAttribute('aria-label','Block name');nm.oninput=()=>{c.name=nm.value};
+    const sub=document.createElement('small');sub.textContent=(i+1)+' of '+cropDraft.length+' · page '+c.n;
+    mid.append(nm,sub);
+    const acts=document.createElement('div');acts.className='cp-acts';
+    const mk=(t,l,fn,dis)=>{const b=document.createElement('button');b.type='button';b.textContent=t;b.setAttribute('aria-label',l);b.title=l;b.disabled=!!dis;b.onclick=fn;return b};
+    acts.append(mk('↑','Move up',()=>move(i,i-1),i===0),mk('↓','Move down',()=>move(i,i+1),i===cropDraft.length-1),mk('⧉','Duplicate (repeat this block)',()=>{cropDraft.splice(i+1,0,{...c});renderCropOrder()}),mk('✕','Remove',()=>{cropDraft.splice(i,1);renderCropOrder()}));
+    row.append(cv,mid,acts);host.appendChild(row);
+    cropThumb(c,cv,run);
+  });
+}
+$('#cropOrderBtn').onclick=()=>setCropTab(cropTab==='order'?'pages':'order');
+$('#cropClear').onclick=()=>{cropDraft=[];document.querySelectorAll('.cp-page').forEach(w=>drawCropBoxes(+w.dataset.n));if(cropTab==='order')renderCropOrder()};
+$('#cropCancel').onclick=()=>{cropRun++;thumbRun++;$('#cropDlg').hidden=true};
 $('#cropDone').onclick=async()=>{
-  cropRun++;$('#cropDlg').hidden=true;
-  const list=cropSorted().map(c=>({n:c.n,x0:c.x0,x1:c.x1,y0:c.y0,y1:c.y1}));
+  cropRun++;thumbRun++;$('#cropDlg').hidden=true;
+  const list=cropDraft.map(c=>({...c}));
   if(!cur)return;
   if(!list.length){
     if(cur.crop)await setCropView(false);
@@ -1430,7 +1565,7 @@ const gSync=(()=>{
   const tombs=()=>{try{return JSON.parse(LS('ss_gtomb')||'[]')}catch(e){return[]}};
   /* short fingerprint of the synced fields (Drive limits a property to 124 bytes) */
   const hash53=str=>{let h1=0xdeadbeef,h2=0x41c6ce57;for(let i=0;i<str.length;i++){const c=str.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677)}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return (4294967296*(2097151&h2)+(h1>>>0)).toString(36)};
-  const sigOf=s=>hash53(JSON.stringify([s.name,s.folder||'All Songs',s.speed,s.bpm,s.zoom,s.notes||'',s.zones||[],s.secs||[],!!s.secOn,s.crops||[],!!s.crop,s.alt||null]));
+  const sigOf=s=>hash53(JSON.stringify([s.name,s.folder||'All Songs',s.speed,s.bpm,s.zoom,s.notes||'',s.zones||[],s.secs||[],!!s.secOn,s.crops||[],!!s.crop,s.alt||null,!!s.step]));
   const ui={};
   function setStatus(t){if(ui.st)ui.st.textContent=t}
   function refreshUI(){
@@ -1519,13 +1654,13 @@ const gSync=(()=>{
           let pid=pf&&pf.id;
           if(s.blob&&!pid)pid=await upload('p_'+id+'.pdf',s.blob,'application/pdf',null,{});
           const sig=sigOf(s);
-          const mid=await upload('m_'+id+'.json',JSON.stringify({id,name:s.name,folder:s.folder||'All Songs',speed:s.speed,bpm:s.bpm,zoom:s.zoom,notes:s.notes||'',zones:s.zones||[],secs:s.secs||[],secOn:!!s.secOn,crops:s.crops||[],crop:!!s.crop,alt:s.alt||null,added:s.added||Date.now()}),'application/json',null,{sig});
+          const mid=await upload('m_'+id+'.json',JSON.stringify({id,name:s.name,folder:s.folder||'All Songs',speed:s.speed,bpm:s.bpm,zoom:s.zoom,notes:s.notes||'',zones:s.zones||[],secs:s.secs||[],secOn:!!s.secOn,crops:s.crops||[],crop:!!s.crop,alt:s.alt||null,step:!!s.step,added:s.added||Date.now()}),'application/json',null,{sig});
           R[id]={sig,mid,pid};up++;continue;
         }
         if(!s&&mf){ // new on another device → download
           const m=await (await download(mf.id)).json();
           let blob=null;if(pf)blob=await (await download(pf.id)).blob();
-          const ns={id,name:m.name,folder:m.folder||'All Songs',speed:m.speed||defSpeed,bpm:m.bpm||bpm,zoom:m.zoom||1,pos:0,notes:m.notes||'',zones:m.zones||[],secs:m.secs||[],secOn:!!m.secOn,crops:m.crops||[],crop:!!m.crop,alt:m.alt||null,added:m.added||Date.now(),blob};
+          const ns={id,name:m.name,folder:m.folder||'All Songs',speed:m.speed||defSpeed,bpm:m.bpm||bpm,zoom:m.zoom||1,pos:0,notes:m.notes||'',zones:m.zones||[],secs:m.secs||[],secOn:!!m.secOn,crops:m.crops||[],crop:!!m.crop,alt:m.alt||null,step:!!m.step,added:m.added||Date.now(),blob};
           await store.del.__origPut(ns);songs.push(ns);
           if(ns.folder&&!folders.includes(ns.folder))folders.push(ns.folder);
           R[id]={sig:sigOf(ns),mid:mf.id,pid:pf&&pf.id};down++;continue;
@@ -1540,7 +1675,7 @@ const gSync=(()=>{
             R[id]={sig:lsig,mid:mf.id,pid:pf&&pf.id};up++;
           }else{ // only remote changed → take it
             const m=await (await download(mf.id)).json();
-            Object.assign(s,{name:m.name,folder:m.folder||'All Songs',speed:m.speed||s.speed,bpm:m.bpm||s.bpm,zoom:m.zoom||s.zoom,notes:m.notes||'',zones:m.zones||[],secs:m.secs||[],secOn:!!m.secOn,crops:m.crops||[],crop:!!m.crop,alt:m.alt||null});
+            Object.assign(s,{name:m.name,folder:m.folder||'All Songs',speed:m.speed||s.speed,bpm:m.bpm||s.bpm,zoom:m.zoom||s.zoom,notes:m.notes||'',zones:m.zones||[],secs:m.secs||[],secOn:!!m.secOn,crops:m.crops||[],crop:!!m.crop,alt:m.alt||null,step:!!m.step});
             await store.del.__origPut(s);
             if(s.folder&&!folders.includes(s.folder))folders.push(s.folder);
             R[id]={sig:sigOf(s),mid:mf.id,pid:pf&&pf.id};down++;
@@ -1569,7 +1704,7 @@ const gSync=(()=>{
       else{setStatus('Sync failed: '+m);if(interactive)toast('Sync failed: '+m)}
     }finally{busy=false;if(dirty){dirty=false;sched()}}
   }
-  const metaOf=s=>({id:s.id,name:s.name,folder:s.folder||'All Songs',speed:s.speed,bpm:s.bpm,zoom:s.zoom,notes:s.notes||'',zones:s.zones||[],secs:s.secs||[],secOn:!!s.secOn,crops:s.crops||[],crop:!!s.crop,alt:s.alt||null,added:s.added||Date.now()});
+  const metaOf=s=>({id:s.id,name:s.name,folder:s.folder||'All Songs',speed:s.speed,bpm:s.bpm,zoom:s.zoom,notes:s.notes||'',zones:s.zones||[],secs:s.secs||[],secOn:!!s.secOn,crops:s.crops||[],crop:!!s.crop,alt:s.alt||null,step:!!s.step,added:s.added||Date.now()});
   function needsSync(){
     const R=rec();
     if(tombs().length)return true;
